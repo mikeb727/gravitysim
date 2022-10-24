@@ -1,0 +1,21 @@
+https://www.youtube.com/watch?v=T_KLMhfiN0U
+
+update:
+	if target waypoint is set:
+		if within range of waypoint:
+			if waypoints remaining in waygroup:
+				set target to next waypoint in waygroup
+				update target velocity
+			otherwise:
+				if waygroups remaining in mission:
+					set target to first waypoint in next waygroup
+					update target velocity
+				otherwise:
+					disable target waypoint
+					set target velocity to zero
+		otherwise:
+			update target velocity
+	otherwise:
+		if waygroups remaining in mission:
+			set target to next waypoint in waygroup
+			update target velocity
