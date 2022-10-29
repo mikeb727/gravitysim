@@ -3,7 +3,7 @@
 
 #include "2DPhysEnv.h"
 
-using namespace std;
+using std::cout, std::cerr;
 
 /* The speed of the simulation, in frames per second. */
 const int framesPerSecond = 60;
@@ -20,12 +20,12 @@ Environment::Environment(Window* w, double W, double H, const Vec& G): _bbox (ne
 	_back = back;
 	_ctrls.push_back(Control(_win, "Radius", 3, 100, 30, 18, 150, Vec(24, 24)));
 	_ctrls.push_back(Control(_win, "Elasticity", 0, 1, 1, 18, 150, Vec(228, 24)));
-	cerr << "Environment created (" << _bbox->getW() << "x" << _bbox->getH() << ", " << _g << ")" << endl;
+	cerr << "Environment created (" << _bbox->getW() << "x" << _bbox->getH() << ", " << _g << ")\n";
 }
 
 Environment::~Environment() {
 	_objs.clear();
-	cerr << "Environment destroyed" << endl;
+	cerr << "Environment destroyed\n";
 };
 
 bool Environment::handleInput(SDL_Event event){
@@ -35,12 +35,12 @@ bool Environment::handleInput(SDL_Event event){
     
     // If the close button on the titlebar is clicked, signal to quit simulation
     if (event.type == SDL_QUIT){
-        cerr << "Close button clicked" << endl;
+        cerr << "Close button clicked\n";
         return true;
     }
     // If the escape key is pressed, signal to quit simulation
     if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE){
-        cerr << "Escape key pressed" << endl;
+        cerr << "Escape key pressed\n";
         return true;
     }
     // If the plus key on the numpad is pressed, increase elasticity of Objects created
@@ -238,11 +238,11 @@ void Environment::print(std::ostream& out) const {
         out << endl;
         for (int i = 0; i < _objs.size(); i++){
             out << "    " << i << " (";
-            _objs[i].print(out); out << ")" << endl;
+            _objs[i].print(out); out << ")\n";
         }
     }
     else {
-        out << " none" << endl;
+        out << " none\n";
     }
 
 }
@@ -256,10 +256,3 @@ void Environment::draw() const {
 		_ctrls[i].draw();
 	}
 }
-
-/*
-			objs[i].move(!((containsPoint(objs[i].topLeft()) && containsPoint(objs[i].bottomLeft())) ||
-                           (containsPoint(objs[i].topRight()) && containsPoint(objs[i].bottomRight()))),
-			             !((containsPoint(objs[i].topLeft()) && containsPoint(objs[i].topRight())) ||
-                           (containsPoint(objs[i].bottomLeft()) && containsPoint(objs[i].bottomRight()))));
-*/
