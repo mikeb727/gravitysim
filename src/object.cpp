@@ -27,8 +27,7 @@ Object::Object(BBox* bounds, double mass, const Vec& position, const Vec& veloci
 }
 
 Object::~Object() {
-    cerr << "Object destroyed" << endl;
-    
+    cerr << "Object at " << _bbox->getPos() << " destroyed" << endl;
 }
 
 bool Object::collidesWith(const Object& otherObj) const {

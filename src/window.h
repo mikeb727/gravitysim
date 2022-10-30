@@ -25,7 +25,7 @@ public:
 
 	void drawRectangle(SDL_Color color, int x, int y, int w, int h);
 	void drawCircle(SDL_Color, int, int, int);
-	void drawCircleGradient(SDL_Color, SDL_Color, int, int, int);
+	void drawCircleGradient(SDL_Color outerColor, SDL_Color innerColor, int xPos, int yPos, int radius);
 	void drawText(std::string, SDL_Color, int, int);
 	
 private:

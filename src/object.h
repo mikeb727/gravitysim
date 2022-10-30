@@ -67,6 +67,8 @@ public:
 
 	BBox* getBBox() const {return _bbox;};
 
+	std::string getType() const {return objType;};
+
 	/* Reverses the object's direction. */
 	void reverseDirection(bool, bool);
 
