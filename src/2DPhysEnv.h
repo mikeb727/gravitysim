@@ -49,6 +49,12 @@ public:
     /* Removes an object from the environment. */
     void removeObj(int);
 
+    /* Clears all objects from the environment. */
+    void clearObjs() {_objs.clear();};
+
+    /* Toggles the run state */
+    void togglePause() {_paused = _paused ? false : true;};
+
     /* Moves all the objects in the environment. */
     void moveObjs();
 

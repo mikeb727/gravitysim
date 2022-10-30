@@ -12,7 +12,9 @@
 #include "window.h"
 #include "2DPhysEnv.h"
 
-using namespace std;
+using std::cerr;
+
+typedef std::vector<Control> CtrlSet;
 
 /* The dimensions of the simulation window. */
 const int SCREENWIDTH = 1024;
@@ -35,10 +37,62 @@ void updateSim(Environment* env){
 	env->update();
 }
 
+bool handleInput(SDL_Event event, Window* win, Environment* env, CtrlSet& ctrls){
+    // If the close button on the titlebar is clicked, signal to quit simulation
+    if (event.type == SDL_QUIT){
+        cerr << "Close button clicked\n";
+        return true;
+    }
+    // If the escape key is pressed, signal to quit simulation
+    if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE){
+        cerr << "Escape key pressed\n";
+        return true;
+    }
+    // If the W key is pressed, increase elasticity of Objects created
+    if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_w){
+        ctrls[0].increaseValue(1.0);
+		cerr << "Radius is " << ctrls[0].getValue() << "\n";
+    }
+    // If the Q key is pressed, decrease elasticity of Objects created
+    if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_q){
+        ctrls[0].decreaseValue(1.0);
+		cerr << "Radius is " << ctrls[0].getValue() << "\n";
+    }
+    // If the S key is pressed, increase elasticity of Objects created
+    if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_s){
+        ctrls[1].increaseValue(0.01);
+		cerr << "Elasticity is " << ctrls[1].getValue() << "\n";
+    }
+    // If the A key is pressed, decrease elasticity of Objects created
+    if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_a){
+        ctrls[1].decreaseValue(0.01);
+		cerr << "Elasticity is " << ctrls[1].getValue() << "\n";
+    }
+	// TODO velocity
+
+    // If the 'C' key is pressed, remove all objects
+    if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_c){
+        env->clearObjs();
+    }
+    // If the space bar is pressed, pause the environment
+    if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_SPACE){
+		env->togglePause();
+    }
+
+	return false;
+
+}
+
 int main(int argc, char* argv[]){
 	
-	Window* mainWindow;
 	Environment* mainEnv;
+	Window* mainWindow;
+	CtrlSet mainCtrls;
+
+	mainCtrls.push_back(Control(mainWindow, "Radius", 3, 100, 30, 18, 150, Vec(24, 24)));
+	mainCtrls.push_back(Control(mainWindow, "Elasticity", 0, 1, 1, 18, 150, Vec(228, 24)));
+	mainCtrls.push_back(Control(mainWindow, "X velocity", -100, 100, 0, 18, 150, Vec(0, 0)));
+	mainCtrls.push_back(Control(mainWindow, "Y velocity", -100, 100, 0, 18, 150, Vec(0, 0)));
 
 	if (argc == 3){
 		mainWindow = new Window("Gravity Sim", atoi(argv[1]), atoi(argv[2]));
@@ -59,12 +113,13 @@ int main(int argc, char* argv[]){
     bool quit = false;
     while (!quit){
     	while (SDL_PollEvent(&ev)){
-			quit = mainEnv->handleInput(ev);
+			quit = handleInput(ev, mainWindow, mainEnv, mainCtrls);
+			mainEnv->handleInput(ev);
 		}
         // Clear the screen
         // Update window
 		if (mainEnv->getT() % 60 == 0){
-			mainEnv->print(cout);
+			mainEnv->print(std::cout);
 		}
 
 		updateSim(mainEnv);
