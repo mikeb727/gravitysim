@@ -7,7 +7,7 @@
     the left mouse button and moving the mouse. */
 
 #include <iostream>
-#include <vector>
+#include <map>
 
 #include "window.h"
 #include "control.h"
@@ -15,7 +15,7 @@
 
 using std::cerr;
 
-typedef std::vector<Control> CtrlSet;
+typedef std::map<std::string, Control> CtrlSet;
 
 /* The dimensions of the simulation window. */
 const int SCREENWIDTH = 1024;
@@ -54,25 +54,41 @@ bool handleInput(SDL_Event event, Window* win, Environment* env, CtrlSet& ctrls)
     }
     // If the W key is pressed, increase elasticity of Objects created
     if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_w){
-        ctrls[0].increaseValue(1.0);
-		cerr << "Radius is " << ctrls[0].getValue() << "\n";
+        ctrls["radius"].increaseValue(1.0);
+		cerr << "Radius is " << ctrls["radius"].getValue() << "\n";
     }
     // If the Q key is pressed, decrease elasticity of Objects created
     if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_q){
-        ctrls[0].decreaseValue(1.0);
-		cerr << "Radius is " << ctrls[0].getValue() << "\n";
+        ctrls["radius"].decreaseValue(1.0);
+		cerr << "Radius is " << ctrls["radius"].getValue() << "\n";
     }
     // If the S key is pressed, increase elasticity of Objects created
     if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_s){
-        ctrls[1].increaseValue(0.01);
-		cerr << "Elasticity is " << ctrls[1].getValue() << "\n";
+        ctrls["elast"].increaseValue(0.01);
+		cerr << "Elasticity is " << ctrls["elast"].getValue() << "\n";
     }
     // If the A key is pressed, decrease elasticity of Objects created
     if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_a){
-        ctrls[1].decreaseValue(0.01);
-		cerr << "Elasticity is " << ctrls[1].getValue() << "\n";
+        ctrls["elast"].decreaseValue(0.01);
+		cerr << "Elasticity is " << ctrls["elast"].getValue() << "\n";
     }
-	// TODO velocity
+	//  velocity
+	if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_LEFT){
+		ctrls["velx"].decreaseValue(5);
+		cerr << "Velocity is " << ctrls["velx"].getValue() << " " << ctrls["vely"].getValue() << "\n";
+	}
+	if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_RIGHT){
+		ctrls["velx"].increaseValue(5);
+		cerr << "Velocity is " << ctrls["velx"].getValue() << " " << ctrls["vely"].getValue() << "\n";
+	}
+	if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_UP){
+		ctrls["vely"].decreaseValue(5);
+		cerr << "Velocity is " << ctrls["velx"].getValue() << " " << ctrls["vely"].getValue() << "\n";
+	}
+	if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_DOWN){
+		ctrls["vely"].increaseValue(5);
+		cerr << "Velocity is " << ctrls["velx"].getValue() << " " << ctrls["vely"].getValue() << "\n";
+	}
 
     // If the 'C' key is pressed, remove all objects
     if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_c){
@@ -120,12 +136,12 @@ bool handleInput(SDL_Event event, Window* win, Environment* env, CtrlSet& ctrls)
     	Vec mousePosition(event.button.x, event.button.y);
     	bool objAtLocation = false, ctrlAtLocation = false;
         if (event.button.button == SDL_BUTTON_LEFT){
-			for (const Control& ctrl: ctrls){
-				if (ctrl.containsPoint(mousePosition)){
-					ctrlAtLocation = true;
-					break;
-				}
-			}
+			// for (const Control& ctrl: ctrls){
+			// 	if (ctrl.containsPoint(mousePosition)){
+			// 		ctrlAtLocation = true;
+			// 		break;
+			// 	}
+			// }
 			for (Object& obj: env->getObjList()){
 				if (obj.getBBox()->containsPoint(mousePosition)){
 					objAtLocation = true;
@@ -134,8 +150,8 @@ bool handleInput(SDL_Event event, Window* win, Environment* env, CtrlSet& ctrls)
 				}
 			}
 			if (!objAtLocation && !ctrlAtLocation){
-				if (env->getBBox()->containsBBox(Circle(mousePosition, 30))){
-					env->addObj(Object(new Circle(mousePosition, 30), 1, mousePosition, Vec(0, 0, true), 1, win));
+				if (env->getBBox()->containsBBox(Circle(mousePosition, ctrls["radius"].getValue()))){
+					env->addObj(Object(new Circle(mousePosition, ctrls["radius"].getValue()), 1, mousePosition, Vec(ctrls["velx"].getValue(), ctrls["vely"].getValue(), true), 1, win));
 				}
 			}
         }
@@ -179,10 +195,10 @@ int main(int argc, char* argv[]){
 	Window* mainWindow;
 	CtrlSet mainCtrls;
 
-	mainCtrls.push_back(Control(mainWindow, "Radius", 3, 100, 30, 18, 150, Vec(24, 24)));
-	mainCtrls.push_back(Control(mainWindow, "Elasticity", 0, 1, 1, 18, 150, Vec(228, 24)));
-	mainCtrls.push_back(Control(mainWindow, "X velocity", -100, 100, 0, 18, 150, Vec(0, 0)));
-	mainCtrls.push_back(Control(mainWindow, "Y velocity", -100, 100, 0, 18, 150, Vec(0, 0)));
+	mainCtrls["radius"] = Control(mainWindow, "Radius", 3, 100, 30, 18, 150, Vec(24, 24));
+	mainCtrls["elast"] = Control(mainWindow, "Elasticity", 0, 1, 1, 18, 150, Vec(24, 24));
+	mainCtrls["velx"] = Control(mainWindow, "X velocity", -500, 500, 0, 18, 150, Vec(24, 24));
+	mainCtrls["vely"] = Control(mainWindow, "Y velocity", -500, 500, 0, 18, 150, Vec(24, 24));
 
 	if (argc == 3){
 		mainWindow = new Window("Gravity Sim", atoi(argv[1]), atoi(argv[2]));
