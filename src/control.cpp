@@ -23,19 +23,6 @@ void Control::setFromPosition(const Vec& position){
 	}
 }
 
-void Control::increaseValue(double change){
-	if (_value + change <= _max){
-		_value += change;
-	}
-	else {
-		_value = _max;
-	}
-}
-void Control::decreaseValue(double change){
-	if (_value - change >= _min){
-		_value -= change;
-	}
-	else {
-		_value = _min;
-	}
+void Control::changeValue(double delta){
+	_value = max(_min, min(_value += delta, _max));
 }

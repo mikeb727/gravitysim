@@ -54,39 +54,39 @@ bool handleInput(SDL_Event event, Window* win, Environment* env, CtrlSet& ctrls)
     }
     // If the W key is pressed, increase elasticity of Objects created
     if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_w){
-        ctrls["radius"].increaseValue(1.0);
+        ctrls["radius"].changeValue(1.0);
 		cerr << "Radius is " << ctrls["radius"].getValue() << "\n";
     }
     // If the Q key is pressed, decrease elasticity of Objects created
     if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_q){
-        ctrls["radius"].decreaseValue(1.0);
+        ctrls["radius"].changeValue(-1.0);
 		cerr << "Radius is " << ctrls["radius"].getValue() << "\n";
     }
     // If the S key is pressed, increase elasticity of Objects created
     if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_s){
-        ctrls["elast"].increaseValue(0.01);
+        ctrls["elast"].changeValue(0.01);
 		cerr << "Elasticity is " << ctrls["elast"].getValue() << "\n";
     }
     // If the A key is pressed, decrease elasticity of Objects created
     if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_a){
-        ctrls["elast"].decreaseValue(0.01);
+        ctrls["elast"].changeValue(-0.01);
 		cerr << "Elasticity is " << ctrls["elast"].getValue() << "\n";
     }
 	//  velocity
 	if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_LEFT){
-		ctrls["velx"].decreaseValue(5);
+		ctrls["velx"].changeValue(-5);
 		cerr << "Velocity is " << ctrls["velx"].getValue() << " " << ctrls["vely"].getValue() << "\n";
 	}
 	if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_RIGHT){
-		ctrls["velx"].increaseValue(5);
+		ctrls["velx"].changeValue(5);
 		cerr << "Velocity is " << ctrls["velx"].getValue() << " " << ctrls["vely"].getValue() << "\n";
 	}
 	if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_UP){
-		ctrls["vely"].decreaseValue(5);
+		ctrls["vely"].changeValue(-5);
 		cerr << "Velocity is " << ctrls["velx"].getValue() << " " << ctrls["vely"].getValue() << "\n";
 	}
 	if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_DOWN){
-		ctrls["vely"].increaseValue(5);
+		ctrls["vely"].changeValue(5);
 		cerr << "Velocity is " << ctrls["velx"].getValue() << " " << ctrls["vely"].getValue() << "\n";
 	}
 
@@ -195,7 +195,7 @@ int main(int argc, char* argv[]){
 	Window* mainWindow;
 	CtrlSet mainCtrls;
 
-	mainCtrls["radius"] = Control(mainWindow, "Radius", 3, 100, 30, 18, 150, Vec(24, 24));
+	mainCtrls["radius"] = Control(mainWindow, "Radius", 15, 100, 30, 18, 150, Vec(24, 24));
 	mainCtrls["elast"] = Control(mainWindow, "Elasticity", 0, 1, 1, 18, 150, Vec(24, 24));
 	mainCtrls["velx"] = Control(mainWindow, "X velocity", -500, 500, 0, 18, 150, Vec(24, 24));
 	mainCtrls["vely"] = Control(mainWindow, "Y velocity", -500, 500, 0, 18, 150, Vec(24, 24));

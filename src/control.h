@@ -13,8 +13,7 @@ public:
 	Control(Window* win, std::string name, double min, double max, double defValue, int height, int width, const Vec& position);
 	void setValue(double newValue) {_value = newValue;};
 	void setFromPosition(const Vec& position);
-	void increaseValue(double change);
-	void decreaseValue(double change);
+	void changeValue(double delta);
 	double getValue() const {return _value;};
 	void draw() const;
 private:
