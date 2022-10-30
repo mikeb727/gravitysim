@@ -9,8 +9,6 @@
 #include "2DVec.h"
 #include "rectangle.h"
 #include "object.h"
-#include "window.h"
-#include "control.h"
 
 typedef std::vector<Object> EnvObjSet;
 
@@ -23,7 +21,7 @@ public:
     Environment();
     /* Creates an environment with dimensions and gravity
         specified. */
-    Environment(Window* win, double, double, const Vec&);
+    Environment(double width, double height, const Vec& gravity);
 
     /* Destroys an environment. */
     ~Environment();
@@ -32,22 +30,19 @@ public:
     const Vec& getG() const {return _g;};
 
     /* Returns the list of objects. */
-    const EnvObjSet& getObjList() const {return _objs;};
+    EnvObjSet& getObjList() {return _objs;};
 
     /* Returns the time the environment has
         run in the simulation. */
     int getT() const {return t;};
 
-    /* Receives input from an SDL event and
-        modifies the environment and its
-        objects accordingly. */
-    bool handleInput(SDL_Event);
+    const BBox* getBBox() const {return _bbox;};
     
     /* Adds an object to the environment. */
-    void addObj(const Object&);
+    void addObj(const Object& newObj);
 
     /* Removes an object from the environment. */
-    void removeObj(int);
+    void removeObj(int objIndex);
 
     /* Clears all objects from the environment. */
     void clearObjs() {_objs.clear();};
@@ -66,7 +61,7 @@ public:
 
     /* Prints all available information about the
         environment to the output given. */
-    void print(std::ostream&) const;
+    void print(std::ostream& dest) const;
     
 private:
     
@@ -75,8 +70,6 @@ private:
     Vec _g; // environment gravity
     bool _paused; // environment run state
     EnvObjSet _objs; // set of objects
-    std::vector<Control> _ctrls; // set of controls
-    Window* _win; // target drawing window
 
 };
 

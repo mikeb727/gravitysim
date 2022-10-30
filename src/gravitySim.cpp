@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "window.h"
+#include "control.h"
 #include "2DPhysEnv.h"
 
 using std::cerr;
@@ -22,6 +23,9 @@ const int SCREENHEIGHT = 768;
 
 /* The scale of the simulation ([pixelsPerMeter] pixels = 1 meter). */
 const double pixelsPerMeter = 80;
+
+/* The speed of the simulation, in frames per second. */
+const int framesPerSecond = 60;
 
 void drawSim(Window* win, Environment* env){
 	win->clear();
@@ -79,6 +83,92 @@ bool handleInput(SDL_Event event, Window* win, Environment* env, CtrlSet& ctrls)
 		env->togglePause();
     }
 
+    if (event.type == SDL_MOUSEBUTTONDOWN){
+		Vec mousePosition(event.button.x, event.button.y);
+		bool objAtLocation = false, ctrlAtLocation = false;
+		if (event.button.button == SDL_BUTTON_LEFT){
+			// TODO reenable mouse interactions with controls
+			// for (const Control& ctrl: ctrls){
+			// 	if (ctrl.containsPoint(mousePosition)){
+			// 		ctrlAtLocation = true;
+			// 		ctrl.setFromPosition(mousePosition);
+			// 		break;
+			// 	}
+			// }
+			if (!ctrlAtLocation){
+				for (Object& obj: env->getObjList()){
+					if (obj.getBBox()->containsPoint(mousePosition)){
+						objAtLocation = true;
+						obj.setSelectState(true);
+						break;
+					}
+				}
+			}
+		}
+		if (event.button.button == SDL_BUTTON_RIGHT){
+			for (int i = 0; i < env->getObjList().size(); i++){
+				if (env->getObjList()[i].getBBox()->containsPoint(mousePosition)){
+					objAtLocation = true;
+                    env->removeObj(i);
+					break;
+				}
+			}		
+		}
+	}
+
+    if (event.type == SDL_MOUSEBUTTONUP){
+    	Vec mousePosition(event.button.x, event.button.y);
+    	bool objAtLocation = false, ctrlAtLocation = false;
+        if (event.button.button == SDL_BUTTON_LEFT){
+			for (const Control& ctrl: ctrls){
+				if (ctrl.containsPoint(mousePosition)){
+					ctrlAtLocation = true;
+					break;
+				}
+			}
+			for (Object& obj: env->getObjList()){
+				if (obj.getBBox()->containsPoint(mousePosition)){
+					objAtLocation = true;
+					obj.setSelectState(false);
+					break;
+				}
+			}
+			if (!objAtLocation && !ctrlAtLocation){
+				if (env->getBBox()->containsBBox(Circle(mousePosition, 30))){
+					env->addObj(Object(new Circle(mousePosition, 30), 1, mousePosition, Vec(0, 0, true), 1, win));
+				}
+			}
+        }
+        if (event.button.button == SDL_BUTTON_RIGHT){
+        	// does nothing
+        }
+    }
+
+    if (event.type == SDL_MOUSEMOTION){
+    	Vec mousePosition(event.button.x, event.button.y);
+		bool objAtLocation = false, ctrlAtLocation = false;
+        if (SDL_GetMouseState(NULL, NULL) & SDL_BUTTON(1)){
+			// for (int i = 0; i < _ctrls.size(); i++){
+			// 	if (_ctrls[i].containsPoint(mousePosition)){
+			// 		ctrlAtLocation = true;
+			// 		_ctrls[i].setFromPosition(mousePosition);			
+			// 		break;
+			// 	}
+			// }
+			if (!ctrlAtLocation){
+				for (Object& obj: env->getObjList()){
+					if (obj.getBBox()->containsPoint(mousePosition) && obj.getSelectState()){
+						objAtLocation = true;
+		            	obj.setPos(Vec(mousePosition));
+		                obj.setVel(Vec((event.motion.xrel) * (pixelsPerMeter * pixelsPerMeter / framesPerSecond),
+		                				   (event.motion.yrel) * (pixelsPerMeter * pixelsPerMeter / framesPerSecond), true));
+						break;
+					}
+				}	
+			}
+        }
+    }
+
 	return false;
 
 }
@@ -96,15 +186,15 @@ int main(int argc, char* argv[]){
 
 	if (argc == 3){
 		mainWindow = new Window("Gravity Sim", atoi(argv[1]), atoi(argv[2]));
-		mainEnv = new Environment(mainWindow, atoi(argv[2]), atoi(argv[1]), Vec(0, 9.8 * pixelsPerMeter, true));
+		mainEnv = new Environment(atoi(argv[2]), atoi(argv[1]), Vec(0, 9.8 * pixelsPerMeter, true));
 	}
 	else if (argc == 5){
 		mainWindow = new Window("Gravity Sim", atoi(argv[1]), atoi(argv[2]));
-		mainEnv = new Environment(mainWindow, atoi(argv[2]), atoi(argv[1]), Vec(atoi(argv[4]), atoi(argv[3]) * pixelsPerMeter, true));
+		mainEnv = new Environment(atoi(argv[2]), atoi(argv[1]), Vec(atoi(argv[4]), atoi(argv[3]) * pixelsPerMeter, true));
 	}
 	else {
 		mainWindow = new Window("Gravity Sim", SCREENWIDTH, SCREENHEIGHT);
-		mainEnv = new Environment(mainWindow, SCREENHEIGHT, SCREENWIDTH, Vec(0, 9.8 * pixelsPerMeter, true));
+		mainEnv = new Environment(SCREENHEIGHT, SCREENWIDTH, Vec(0, 9.8 * pixelsPerMeter, true));
 	}
 
 	SDL_Event ev;
@@ -114,7 +204,6 @@ int main(int argc, char* argv[]){
     while (!quit){
     	while (SDL_PollEvent(&ev)){
 			quit = handleInput(ev, mainWindow, mainEnv, mainCtrls);
-			mainEnv->handleInput(ev);
 		}
         // Clear the screen
         // Update window
