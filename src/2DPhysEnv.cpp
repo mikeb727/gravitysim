@@ -12,12 +12,9 @@ const double pixelsPerMeter = 80;
 
 Environment::Environment(): t (0){
 	SDL_Color back = {200, 200, 200, 0};
-	_back = back;
 }
 
 Environment::Environment(Window* w, double W, double H, const Vec& G): _bbox (new Rectangle(Vec(0, 0, true), W, H)), _win (w), t(0), _g (G), _paused (false) {
-	SDL_Color back = {200, 200, 200, 0};
-	_back = back;
 	_ctrls.push_back(Control(_win, "Radius", 3, 100, 30, 18, 150, Vec(24, 24)));
 	_ctrls.push_back(Control(_win, "Elasticity", 0, 1, 1, 18, 150, Vec(228, 24)));
 	cerr << "Environment created (" << _bbox->getW() << "x" << _bbox->getH() << ", " << _g << ")\n";
@@ -46,42 +43,42 @@ bool Environment::handleInput(SDL_Event event){
     // If the plus key on the numpad is pressed, increase elasticity of Objects created
     if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_w){
         _ctrls[0].increaseValue(1.0);
-		cerr << "Radius is " << _ctrls[0].getValue() << endl;
+		cerr << "Radius is " << _ctrls[0].getValue() << "\n";
     }
     // If the minus key of the numpad is pressed, decrease elasticity of Objects created
     if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_q){
         _ctrls[0].decreaseValue(1.0);
-		cerr << "Radius is " << _ctrls[0].getValue() << endl;
+		cerr << "Radius is " << _ctrls[0].getValue() << "\n";
     }
     // If the plus key on the numpad is pressed, increase elasticity of Objects created
     if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_s){
         _ctrls[1].increaseValue(0.01);
-		cerr << "Elasticity is " << _ctrls[1].getValue() << endl;
+		cerr << "Elasticity is " << _ctrls[1].getValue() << "\n";
     }
     // If the minus key of the numpad is pressed, decrease elasticity of Objects created
     if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_a){
         _ctrls[1].decreaseValue(0.01);
-		cerr << "Elasticity is " << _ctrls[1].getValue() << endl;
+		cerr << "Elasticity is " << _ctrls[1].getValue() << "\n";
     }
     // If the up arrow key is pressed, increase vertical velocity of Objects created
     if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_UP){
         yVelocity -= 2;
-        cerr << "Velocity is " << Vec(xVelocity, yVelocity) << endl;
+        cerr << "Velocity is " << Vec(xVelocity, yVelocity) << "\n";
     }
     // If the down arrow key is pressed, decrease vertical velocity of Objects created
     if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_DOWN){
         yVelocity += 2;
-        cerr << "Velocity is " << Vec(xVelocity, yVelocity) << endl;
+        cerr << "Velocity is " << Vec(xVelocity, yVelocity) << "\n";
     }
     // If the left arrow key is pressed, decrease horizontal velocity of Objects created
     if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_LEFT){
         xVelocity -= 2;
-        cerr << "Velocity is " << Vec(xVelocity, yVelocity) << endl;
+        cerr << "Velocity is " << Vec(xVelocity, yVelocity) << "\n";
     }
     // If the right arrow key is pressed, increase horizontal velocity of Objects created
     if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_RIGHT){
         xVelocity += 2;
-        cerr << "Velocity is " << Vec(xVelocity, yVelocity) << endl;
+        cerr << "Velocity is " << Vec(xVelocity, yVelocity) << "\n";
     }
     // If the 'C' key is pressed, remove all objects
     if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_c){
@@ -232,10 +229,10 @@ void Environment::update() {
 
 void Environment::print(std::ostream& out) const {
 
-    out << "[" << t  << "]"<<  (_paused ? " (environment paused)" : "") << endl;
+    out << "[" << t  << "]"<<  (_paused ? " (environment paused)" : "") << "\n";
      out << "Objects:";
     if (_objs.size() > 0){
-        out << endl;
+        out << "\n";
         for (int i = 0; i < _objs.size(); i++){
             out << "    " << i << " (";
             _objs[i].print(out); out << ")\n";
@@ -245,14 +242,4 @@ void Environment::print(std::ostream& out) const {
         out << " none\n";
     }
 
-}
-
-void Environment::draw() const {
-	_win->drawRectangle(_back, 0, 0, _bbox->getW(), _bbox->getH());
-	for (int i = 0; i < _objs.size(); i++){
-		_objs[i].draw();
-	}
-	for (int i = 0; i < _ctrls.size(); i++){
-		_ctrls[i].draw();
-	}
 }

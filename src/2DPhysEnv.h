@@ -12,6 +12,8 @@
 #include "window.h"
 #include "control.h"
 
+typedef std::vector<Object> EnvObjSet;
+
 class Environment {
 
 public:
@@ -29,13 +31,12 @@ public:
     /* Returns the environment's gravity. */
     const Vec& getG() const {return _g;};
 
+    /* Returns the list of objects. */
+    const EnvObjSet& getObjList() const {return _objs;};
+
     /* Returns the time the environment has
         run in the simulation. */
     int getT() const {return t;};
-    
-	SDL_Color getBackground() const {return _back;};
-    
-    void setBackground(SDL_Color c) {_back = c;};
 
     /* Receives input from an SDL event and
         modifies the environment and its
@@ -61,17 +62,14 @@ public:
         environment to the output given. */
     void print(std::ostream&) const;
     
-    void draw() const;
-    
 private:
     
 	BBox* _bbox; // environment boundary
     int t; // simulation time
     Vec _g; // environment gravity
     bool _paused; // environment run state
-    std::vector<Object> _objs; // set of objects
+    EnvObjSet _objs; // set of objects
     std::vector<Control> _ctrls; // set of controls
-    SDL_Color _back; // environment background color
     Window* _win; // target drawing window
 
 };

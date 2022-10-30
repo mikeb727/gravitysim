@@ -9,6 +9,7 @@
 #include <iostream>
 #include <vector>
 
+#include "window.h"
 #include "2DPhysEnv.h"
 
 using namespace std;
@@ -19,6 +20,20 @@ const int SCREENHEIGHT = 768;
 
 /* The scale of the simulation ([pixelsPerMeter] pixels = 1 meter). */
 const double pixelsPerMeter = 80;
+
+void drawSim(Window* win, Environment* env){
+	win->clear();
+	// draw all objs
+	for (const Object& obj: env->getObjList()){
+		Vec pos(obj.getBBox()->getPos());
+		win->drawCircleGradient(Colors::red, Colors::white, pos.x(), pos.y(), obj.getBBox()->getW()/2);
+	}
+	win->update();
+}
+
+void updateSim(Environment* env){
+	env->update();
+}
 
 int main(int argc, char* argv[]){
 	
@@ -51,16 +66,12 @@ int main(int argc, char* argv[]){
 		if (mainEnv->getT() % 60 == 0){
 			mainEnv->print(cout);
 		}
-        mainWindow->clear();
-        mainEnv->update();
-		mainEnv->draw();
-        mainWindow->update();
 
+		updateSim(mainEnv);
+		drawSim(mainWindow, mainEnv);
     }
     
     delete mainWindow; delete mainEnv;
-    
-    //cin.get();
 
 	return 0;
 }
