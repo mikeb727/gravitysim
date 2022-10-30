@@ -6,9 +6,6 @@ using namespace std;
 /* The scale of the simulation. */
 const double pixelsPerMeter = 80;
 
-/* Pi. */
-const double pi = 3.1415926535;
-
 /* The speed of the simulation, in frames per second. */
 const int framesPerSecond = 60;
 
@@ -41,17 +38,17 @@ void Object::resolveCollision(Object& otherObj){
 	double sumVel = _vel.mag() + otherObj._vel.mag();
 	double sumMass = _m + otherObj._m;
 	Vec collVec = otherObj._bbox->getPos() - _bbox->getPos();
-	double resultAngle = _vel.dir() + ((collVec.dir() - _vel.dir()) * 2) + pi;
+	double resultAngle = _vel.dir() + ((collVec.dir() - _vel.dir()) * 2) + M_PI;
 	/*
 	if (_pos.x() <= otherObj._pos.x()){ // to the left
-		newVel = Vec((m * sumVel / sumMass), 2 * newVel.dir() - pi, false);
+		newVel = Vec((m * sumVel / sumMass), 2 * newVel.dir() - M_PI, false);
 	}
 	else { // to the right
 		newVel = Vec((m * sumVel / sumMass), 2 * newVel.dir(), false);vel
 	}
 	*/
 	_vel = _elast * Vec((otherObj._m * sumVel / sumMass), resultAngle, false);
-	otherObj._vel = _elast * Vec((_m * sumVel / sumMass), resultAngle + pi, false);
+	otherObj._vel = _elast * Vec((_m * sumVel / sumMass), resultAngle + M_PI, false);
 }
 
 Vec Object::nextPos() const {
