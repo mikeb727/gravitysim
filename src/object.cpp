@@ -10,7 +10,7 @@ const int framesPerSecond = 60;
 Object::Object() : _bbox (new Circle(Vec(0, 0, true), 10)), _m(1), _elast(0), objType("Object") {}
 
 Object::Object(BBox* bounds, double mass, const Vec& position, const Vec& velocity, const double& elasticity)
-: _bbox(bounds), _m(mass), _vel(velocity), _elast(elasticity), objType("Object"){
+: _bbox(bounds), _m(mass), _vel(velocity), _elast(elasticity), objType("Object"), selectState(false){
 	std::cerr << "Object created at " << _bbox->getPos() << " with velocity " << _vel << " and elasticity " << elasticity << "\n";
 }
 

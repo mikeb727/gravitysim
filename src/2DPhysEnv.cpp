@@ -55,8 +55,6 @@ void Environment::moveObjs(){
 			/* Move the object, reversing if any part of the object would leave the environment */
 			_objs[i].move(!(_bbox->containsPoint(_objs[i].nextBBox()->left()) && _bbox->containsPoint(_objs[i].nextBBox()->right())),
 						  !(_bbox->containsPoint(_objs[i].nextBBox()->top()) && _bbox->containsPoint(_objs[i].nextBBox()->bottom())));
-			//objs[i].move(!((0 <= objs[i].nextPos().x() - objs[i].getR()) && (objs[i].nextPos().x() + objs[i].getR() <= _w)),
-			//             !((0 <= objs[i].nextPos().y() - (objs[i].getR())) && (objs[i].nextPos().y() + (objs[i].getR() ) <= _h)));
 		}
 
     }
