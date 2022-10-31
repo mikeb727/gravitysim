@@ -195,10 +195,10 @@ int main(int argc, char* argv[]){
 	Window* mainWindow;
 	CtrlSet mainCtrls;
 
-	mainCtrls["radius"] = Control(mainWindow, "Radius", 15, 100, 30, 18, 150, Vec(24, 24));
-	mainCtrls["elast"] = Control(mainWindow, "Elasticity", 0, 1, 1, 18, 150, Vec(24, 24));
-	mainCtrls["velx"] = Control(mainWindow, "X velocity", -500, 500, 0, 18, 150, Vec(24, 24));
-	mainCtrls["vely"] = Control(mainWindow, "Y velocity", -500, 500, 0, 18, 150, Vec(24, 24));
+	mainCtrls["radius"] = Control("Radius", 15, 100, 30);
+	mainCtrls["elast"] = Control("Elasticity", 0, 1, 1);
+	mainCtrls["velx"] = Control("X velocity", -500, 500, 0);
+	mainCtrls["vely"] = Control("Y velocity", -500, 500, 0);
 
 	if (argc == 3){
 		mainWindow = new Window("Gravity Sim", atoi(argv[1]), atoi(argv[2]));

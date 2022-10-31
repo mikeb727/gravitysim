@@ -1,26 +1,18 @@
 #ifndef CONTROL_H
 #define CONTROL_H
 
-#include "window.h"
-#include "rectangle.h"
-
 #include <string>
-#include <sstream>
 
-class Control : public Rectangle {
+class Control {
 public:
 	Control();
-	Control(Window* win, std::string name, double min, double max, double defValue, int height, int width, const Vec& position);
+	Control(std::string name, double min, double max, double defaultVal);
 	void setValue(double newValue) {_value = newValue;};
-	void setFromPosition(const Vec& position);
 	void changeValue(double delta);
 	double getValue() const {return _value;};
-	void draw() const;
 private:
 	std::string _name;
 	double _min, _value, _max;
-	Rectangle _interactiveArea;
-	Window* _win;
 };
 
 
