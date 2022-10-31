@@ -2,8 +2,6 @@
 
 const double PI = 3.1415927;
 
-using namespace std;
-
 Circle::Circle() : _r (0) {}
 Circle::Circle(const Vec& p, double r) : BBox(p, 2 * r, 2 * r), _r (r) {}
 Circle::~Circle() {}
@@ -69,17 +67,12 @@ bool Circle::intersects(const BBox& b) const {
 	        containsPoint(b.topRight()));
 }
 void Circle::printAllPoints(std::ostream& out) const {
-	out << top() << endl
-	        << topLeft() << endl
-	        << left() << endl
-	        << bottomLeft() << endl
-	        << bottom() << endl
-	        << bottomRight() << endl
-	        << right() << endl
-	        << topRight() << endl;
-}
-
-void Circle::draw(Window* win, SDL_Color c) const {
-	win->drawCircleGradient(c, ImageTools::blend(c, 0.6, Colors::white, 0.4), _pos.x(), _pos.y(), _r);
-
+	out << top() << "\n"
+	    << topLeft() << "\n"
+	    << left() << "\n"
+	    << bottomLeft() << "\n"
+	    << bottom() << "\n"
+	    << bottomRight() << "\n"
+		<< right() << "\n"
+	    << topRight() << "\n";
 }

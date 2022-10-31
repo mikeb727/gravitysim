@@ -65,7 +65,3 @@ bool Rectangle::intersects(const BBox& b) const {
 	        containsPoint(b.right()) ||
 	        containsPoint(b.topRight()));
 }
-
-void Rectangle::draw(Window* win, SDL_Color c) const{
-	win->drawRectangle(c, _pos.x(), _pos.y(), _w, _h);
-}
