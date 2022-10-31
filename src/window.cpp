@@ -1,29 +1,27 @@
 #include "window.h"
 
-using namespace std;
-
-Window::Window(string n, int width, int height) : name (n), w (width), h (height){
+Window::Window(std::string n, int width, int height) : name (n), w (width), h (height){
 
    	// Initialize SDL
 	if (SDL_Init(SDL_INIT_EVERYTHING) == -1){
-		cerr << SDL_GetError() << endl;
+		std::cerr << SDL_GetError() << "\n";
 	}
 	
 	// Initialize window
 	win = SDL_CreateWindow(name.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, w, h, SDL_WINDOW_SHOWN);
 	if (win == NULL){
-		cerr << SDL_GetError() << endl;
+		std::cerr << SDL_GetError() << "\n";
 	}
 	else {
 		// Initialize renderer
 		ren = SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 		if (ren == NULL){
-			cerr << SDL_GetError() << endl;
+			std::cerr << SDL_GetError() << "\n";
 		}
 	}
 	
 	if (TTF_Init() != 0){
-		cerr << SDL_GetError() << endl;
+		std::cerr << SDL_GetError() << "\n";
 	}
 	
 	font = TTF_OpenFont("images/mainFont.ttf", ImageTools::fontSize);

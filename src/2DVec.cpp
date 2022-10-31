@@ -4,8 +4,6 @@
 
 #include "2DVec.h"
 
-using namespace std;
-
 const double pi = 3.14159265;
 
 Vec::Vec(): magnitude (0), direction (0) {}
@@ -48,7 +46,6 @@ Vec Vec::unit() const{
     return Vec(x() / magnitude, y() / magnitude);
 }
 
-
 Vec Vec::plus(const Vec& vec) const {
     return Vec(x() + vec.x(), y() + vec.y());
 }
@@ -86,10 +83,10 @@ bool Vec::operator==(const Vec& vec) const {
 
 void Vec::print(std::ostream& out, bool componentForm = true) const {
     if (componentForm){
-        out << "<" << x() << ", " << y() << ">";
+        out << "(" << x() << "," << y() << ")";
     }
     else {
-        out << "(" << magnitude << ", " << direction << ")" << endl;
+        out << "(mag" << magnitude << ",dir" << direction << ")";
     }
 }
 
@@ -109,44 +106,3 @@ Vec rk4(const Vec& v, const Vec& dv, const Vec& ddv, double t){
 	
 	return v + (t * ((k1 + 2 * k2 + 2 * k3 + k4) / 6));
 }
-
-/*
-int main(){
-
-    Vec vec1;
-    Vec vec2(2, pi, false);
-    Vec vec3(3, 4, true);
-    Vec vec4(7, 24);
-
-    cerr << "vec1 is " << vec1 << ", or "; vec1.print(cerr, false);
-    cerr << "vec2 is " << vec2 << ", or "; vec2.print(cerr, false);
-    cerr << "vec3 is " << vec3 << ", or "; vec3.print(cerr, false);
-    cerr << "vec4 is " << vec4 << ", or "; vec4.print(cerr, false);
-
-    Vec vec5 = vec3;
-
-    cerr << "\nvec5 is " << vec5 << ", or "; vec5.print(cerr, false);
-
-    Vec vec6 = vec3 + vec4;
-
-    cerr << "vec6 is " << vec6 << ", or "; vec6.print(cerr, false);
-
-    Vec vec7 = vec6 - (vec3 * 2);
-
-    cerr << "vec7 is " << vec7 << ", or "; vec7.print(cerr, false);
-
-    vec7 = vec6 - (2 * vec3);
-
-    cerr << "vec7 is " << vec7 << ", or "; vec7.print(cerr, false);
-
-    vec1 = Vec(0, 2);
-
-    cerr << "vec1 is now " << vec1 << ", or "; vec1.print(cerr, false);
-    cerr << "vec1 dot vec2 is " << vec1.dot(vec2) << endl;
-    cerr << "vec2 dot vec1 is " << vec2.dot(vec1) << endl;
-
-    cerr << "vec3 cross vec4 is " << vec3.cross(vec4) << endl;
-    cerr << "vec4 cross vec3 is " << vec4.cross(vec3) << endl;
-
-}
-*/

@@ -3,8 +3,6 @@
 
 #include "imageTools.h"
 
-using namespace std;
-
 namespace ImageTools {
 
 	SDL_Texture* loadImage(std::string fileName, SDL_Renderer* renderer){
@@ -12,7 +10,7 @@ namespace ImageTools {
 		SDL_Texture *tex = IMG_LoadTexture(renderer, fileName.c_str());
 
 		if (tex == NULL){
-			std::cout << SDL_GetError() << std::endl;
+			std::cout << SDL_GetError() << "\n";
 		}
 
 		return tex;

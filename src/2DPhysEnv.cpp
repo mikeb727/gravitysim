@@ -11,9 +11,7 @@ const int framesPerSecond = 60;
 
 const double pixelsPerMeter = 80;
 
-Environment::Environment(): t (0){
-	SDL_Color back = {200, 200, 200, 0};
-}
+Environment::Environment(): t (0){}
 
 Environment::Environment(double W, double H, const Vec& G): _bbox (new Rectangle(Vec(0, 0, true), W, H)), t(0), _g (G), _paused (false) {
 	cerr << "Environment created (" << _bbox->getW() << "x" << _bbox->getH() << ", " << _g << ")\n";

@@ -1,8 +1,6 @@
 #include "object.h"
 #include <cmath>
 
-using namespace std;
-
 /* The scale of the simulation. */
 const double pixelsPerMeter = 80;
 
@@ -13,11 +11,11 @@ Object::Object() : _bbox (new Circle(Vec(0, 0, true), 10)), _m(1), _elast(0), ob
 
 Object::Object(BBox* bounds, double mass, const Vec& position, const Vec& velocity, const double& elasticity)
 : _bbox(bounds), _m(mass), _vel(velocity), _elast(elasticity), objType("Object"){
-	cerr << "Object created at " << _bbox->getPos() << " with velocity " << _vel << " and elasticity " << elasticity << endl;
+	std::cerr << "Object created at " << _bbox->getPos() << " with velocity " << _vel << " and elasticity " << elasticity << "\n";
 }
 
 Object::~Object() {
-    cerr << "Object at " << _bbox->getPos() << " destroyed" << endl;
+    std::cerr << "Object at " << _bbox->getPos() << " destroyed\n";
 }
 
 bool Object::collidesWith(const Object& otherObj) const {
