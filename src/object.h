@@ -10,8 +10,6 @@
 #include <iostream>
 #include <cmath>
 
-#include "window.h"
-
 class Object {
 public:
 
@@ -22,7 +20,7 @@ public:
 	/* Creates an object with the radius, mass, position, elasticity,
         and velocity specified, to be displayed in the renderer
         specified. */
-	Object(BBox* bounds, double mass, const Vec& position, const Vec& velocity, const double& elasticity, Window* win);
+	Object(BBox* bounds, double mass, const Vec& position, const Vec& velocity, const double& elasticity);
 
     /* Destroys the object, printing a message indicating its destruction. */
 	~Object();
@@ -41,9 +39,6 @@ public:
 
     /* Returns the object's mass. */
     double getM() const {return _m;};
-    
-    /* Returns the object's color. */
-    SDL_Color getColor() const {return _color;};
 
 	/* Sets the acceleration of the object. This function is to be used
 		by the environment. */
@@ -81,15 +76,9 @@ public:
 	/* Sets the object's velocity according to a vector. */
 	void setVel(const Vec&);
 
-    /* Sets the select state to false, effectively signaling that the object
-        is free to move according to the environment's physical laws again. */
-	void unselect() {selectState = false;};
-
 	/* Prints all available information about the object to the output
         location specified. */
     void print(std::ostream&) const;
-    
-    void draw() const;
     
 private:
 
@@ -102,9 +91,6 @@ private:
 	double _elast; // ratio of pre- to post- collision velocity
 
 	bool selectState; // whether the object is being clicked
-	
-	SDL_Color _color; // object color
-	Window* _win; // target drawing window
 
 };
 

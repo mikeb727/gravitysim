@@ -151,7 +151,7 @@ bool handleInput(SDL_Event event, Window* win, Environment* env, CtrlSet& ctrls)
 			}
 			if (!objAtLocation && !ctrlAtLocation){
 				if (env->getBBox()->containsBBox(Circle(mousePosition, ctrls["radius"].getValue()))){
-					env->addObj(Object(new Circle(mousePosition, ctrls["radius"].getValue()), 1, mousePosition, Vec(ctrls["velx"].getValue(), ctrls["vely"].getValue(), true), 1, win));
+					env->addObj(Object(new Circle(mousePosition, ctrls["radius"].getValue()), 1, mousePosition, Vec(ctrls["velx"].getValue(), ctrls["vely"].getValue(), true), ctrls["elast"].getValue()));
 				}
 			}
         }
