@@ -11,11 +11,11 @@ Object::Object() : _bbox (new Circle(Vec(0, 0, true), 10)), _m(1), _elast(0), ob
 
 Object::Object(BBox* bounds, double mass, const Vec& position, const Vec& velocity, const double& elasticity)
 : _bbox(bounds), _m(mass), _vel(velocity), _elast(elasticity), objType("Object"), selectState(false){
-	std::cerr << "Object created at " << _bbox->getPos() << " with velocity " << _vel << " and elasticity " << elasticity << "\n";
+	std::cerr << "obj create pos " << _bbox->getPos() << " vel " << _vel << " elast " << elasticity << "\n";
 }
 
 Object::~Object() {
-    std::cerr << "Object at " << _bbox->getPos() << " destroyed\n";
+    std::cerr << "obj delete pos " << _bbox->getPos() << "\n";
 }
 
 bool Object::collidesWith(const Object& otherObj) const {
@@ -79,7 +79,7 @@ void Object::setAccel(const Vec& vec){
 
 void Object::print(std::ostream& out) const {
 
-	out << objType << ", radius "  << ", " << _bbox->getPos() << ", " << _vel << ", " << _accel << (selectState ? "selected" : "");
+	out << "type " << objType << " dim " << _bbox->getH() << "x" << _bbox->getW() << " pos " << _bbox->getPos() << " vel " << _vel << " accel " << _accel << (selectState ? " selected" : "");
 
 }
 

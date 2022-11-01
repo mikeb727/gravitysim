@@ -11,14 +11,27 @@
 #include "SDL2/SDL_image.h"
 #include "SDL2/SDL_ttf.h"
 
-namespace Colors {
-	const SDL_Color black = {0, 0, 0, 255};
-	const SDL_Color white = {255, 255, 255, 255};
-	const SDL_Color red = {255, 0, 0, 255};
-	const SDL_Color blue = {0, 0, 255, 255};
-}
-
 namespace ImageTools {
+
+	namespace Colors {
+		const SDL_Color black = {0, 0, 0, 255};
+		const SDL_Color white = {255, 255, 255, 255};
+		const SDL_Color red = {255, 0, 0, 255};
+		const SDL_Color green = {0, 255, 0, 255};
+		const SDL_Color blue = {0, 0, 255, 255};
+	}
+
+	// see https://stackoverflow.com/questions/3018313/
+	typedef struct {
+		double r;       // a fraction between 0 and 1
+		double g;       // a fraction between 0 and 1
+		double b;       // a fraction between 0 and 1
+	} rgb;
+	typedef struct {
+		double h;       // angle in degrees
+		double s;       // a fraction between 0 and 1
+		double v;       // a fraction between 0 and 1
+	} hsv;
 
 	const int fontSize = 18;
 
@@ -41,6 +54,8 @@ namespace ImageTools {
 	
 	SDL_Color blend(SDL_Color, double, SDL_Color, double);
 	SDL_Color randomColor();
+
+	rgb hsv2rgb(hsv in);
 
 }
 

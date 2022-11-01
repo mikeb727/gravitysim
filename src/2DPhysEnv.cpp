@@ -14,17 +14,17 @@ const double pixelsPerMeter = 80;
 Environment::Environment(): t (0) {}
 
 Environment::Environment(double W, double H, const Vec& G): _bbox (new Rectangle(Vec(0, 0, true), W, H)), t(0), _g (G), _paused (false), nextObjId(0) {
-	cerr << "Environment created (" << _bbox->getW() << "x" << _bbox->getH() << ", " << _g << ")\n";
+	cerr << "env create dim " << _bbox->getW() << "x" << _bbox->getH() << " gravity " << _g << "\n";
 }
 
 Environment::~Environment() {
 	_objs.clear();
-	cerr << "Environment destroyed\n";
+	cerr << "env delete\n";
 };
 
 void Environment::addObj(const Object& obj){
 
-    _objs[nextObjId++] = obj;
+	_objs.emplace(nextObjId++, obj);
 
 }
 
@@ -63,24 +63,18 @@ void Environment::update() {
 
     if (!_paused){
         moveObjs();
-        t++;
     }
+    t++;
 
 }
 
 void Environment::print(std::ostream& out) const {
 
-    out << "[" << t  << "]"<<  (_paused ? " (environment paused)" : "") << "\n";
-     out << "Objects:";
+    out << "[" << t  << "] env " <<  (_paused ? "paused" : "") << "\n";
     if (_objs.size() > 0){
-        out << "\n";
         for (auto& obj: _objs){
-            out << "    " << obj.first << " (";
-            obj.second.print(out); out << ")\n";
+            out << " obj id " << obj.first << " ";
+            obj.second.print(out); out << "\n";
         }
     }
-    else {
-        out << " none\n";
-    }
-
 }

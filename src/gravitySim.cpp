@@ -33,9 +33,10 @@ const int framesPerSecond = 60;
 void drawSim(Window* win, Environment* env, ObjColorMap& ocm){
 	win->clear();
 	// draw all objs
+  win->drawRectangle(SDL_Color{200, 180, 150, 255}, 0, 0, env->getBBox()->getW(), env->getBBox()->getH());
 	for (auto& obj: env->getObjList()){
 		Vec pos(obj.second.getBBox()->getPos());
-		win->drawCircleGradient(ocm[obj.first], Colors::white, pos.x(), pos.y(), obj.second.getBBox()->getW()/2);
+		win->drawCircleGradient(ocm[obj.first], ImageTools::blend(ocm[obj.first], 0.5, ImageTools::Colors::white, 0.5), pos.x(), pos.y(), obj.second.getBBox()->getW()/2);
 	}
 	win->update();
 }
