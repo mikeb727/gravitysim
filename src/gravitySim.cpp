@@ -16,6 +16,7 @@
 using std::cerr;
 
 typedef std::map<std::string, Control> CtrlSet;
+typedef std::map<int, SDL_Color> ObjColorMap;
 
 /* The dimensions of the simulation window. */
 const int SCREENWIDTH = 1024;
@@ -27,12 +28,14 @@ const double pixelsPerMeter = 80;
 /* The speed of the simulation, in frames per second. */
 const int framesPerSecond = 60;
 
-void drawSim(Window* win, Environment* env){
+
+
+void drawSim(Window* win, Environment* env, ObjColorMap& ocm){
 	win->clear();
 	// draw all objs
 	for (auto& obj: env->getObjList()){
 		Vec pos(obj.second.getBBox()->getPos());
-		win->drawCircleGradient(Colors::red, Colors::white, pos.x(), pos.y(), obj.second.getBBox()->getW()/2);
+		win->drawCircleGradient(ocm[obj.first], Colors::white, pos.x(), pos.y(), obj.second.getBBox()->getW()/2);
 	}
 	win->update();
 }
@@ -41,7 +44,7 @@ void updateSim(Environment* env){
 	env->update();
 }
 
-bool handleInput(SDL_Event event, Window* win, Environment* env, CtrlSet& ctrls){
+bool handleInput(SDL_Event event, Window* win, Environment* env, CtrlSet& ctrls, ObjColorMap& ocm){
     // If the close button on the titlebar is clicked, signal to quit simulation
     if (event.type == SDL_QUIT){
         cerr << "Close button clicked\n";
@@ -152,6 +155,7 @@ bool handleInput(SDL_Event event, Window* win, Environment* env, CtrlSet& ctrls)
 			if (!objAtLocation && !ctrlAtLocation){
 				if (env->getBBox()->containsBBox(Circle(mousePosition, ctrls["radius"].getValue()))){
 					env->addObj(Object(new Circle(mousePosition, ctrls["radius"].getValue()), 1, mousePosition, Vec(ctrls["velx"].getValue(), ctrls["vely"].getValue(), true), ctrls["elast"].getValue()));
+					ocm[env->lastObjId()] = ImageTools::randomColor();
 				}
 			}
         }
@@ -194,6 +198,7 @@ int main(int argc, char* argv[]){
 	Environment* mainEnv;
 	Window* mainWindow;
 	CtrlSet mainCtrls;
+	ObjColorMap mainOcm;
 
 	mainCtrls["radius"] = Control("Radius", 15, 100, 30);
 	mainCtrls["elast"] = Control("Elasticity", 0, 1, 1);
@@ -219,7 +224,7 @@ int main(int argc, char* argv[]){
     bool quit = false;
     while (!quit){
     	while (SDL_PollEvent(&ev)){
-			quit = handleInput(ev, mainWindow, mainEnv, mainCtrls);
+			quit = handleInput(ev, mainWindow, mainEnv, mainCtrls, mainOcm);
 		}
         // Clear the screen
         // Update window
@@ -228,7 +233,7 @@ int main(int argc, char* argv[]){
 		}
 
 		updateSim(mainEnv);
-		drawSim(mainWindow, mainEnv);
+		drawSim(mainWindow, mainEnv, mainOcm);
     }
     
     delete mainWindow; delete mainEnv;

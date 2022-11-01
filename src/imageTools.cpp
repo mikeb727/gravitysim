@@ -76,6 +76,18 @@ namespace ImageTools {
 		return result;
 	}
 
+	SDL_Color randomColor(){
+		SDL_Color result = {std::rand() % 255,
+							std::rand() % 255,
+							std::rand() % 255,
+							255};
+		while (result.r + result.g + result.b > 350){
+			result.r = std::rand() % 255;
+			result.g = std::rand() % 255;
+			result.b = std::rand() % 255;
+		}
+		return result;
+	}
 
 	void drawText(std::string text, TTF_Font* font, SDL_Color color, int x, int y, SDL_Renderer* renderer){
 		//We need to first render to a surface as that's what TTF_RenderText returns, then

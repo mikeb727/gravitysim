@@ -40,6 +40,7 @@ namespace ImageTools {
 	void drawText(std::string, TTF_Font*, SDL_Color, int, int, SDL_Renderer*);
 	
 	SDL_Color blend(SDL_Color, double, SDL_Color, double);
+	SDL_Color randomColor();
 
 }
 

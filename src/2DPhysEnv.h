@@ -41,6 +41,8 @@ public:
     /* Adds an object to the environment. */
     void addObj(const Object& newObj);
 
+    int lastObjId() const {return nextObjId-1;};
+
     /* Removes an object from the environment. */
     void removeObj(int objId);
 
