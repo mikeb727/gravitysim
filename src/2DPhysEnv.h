@@ -4,13 +4,13 @@
 #define ENV2D_H
 
 #include <cmath>
-#include <vector>
+#include <map>
 
 #include "2DVec.h"
 #include "rectangle.h"
 #include "object.h"
 
-typedef std::vector<Object> EnvObjSet;
+typedef std::map<int, Object> EnvObjSet;
 
 class Environment {
 
@@ -42,7 +42,7 @@ public:
     void addObj(const Object& newObj);
 
     /* Removes an object from the environment. */
-    void removeObj(int objIndex);
+    void removeObj(int objId);
 
     /* Clears all objects from the environment. */
     void clearObjs() {_objs.clear();};
@@ -70,6 +70,7 @@ private:
     Vec _g; // environment gravity
     bool _paused; // environment run state
     EnvObjSet _objs; // set of objects
+    int nextObjId;
 
 };
 

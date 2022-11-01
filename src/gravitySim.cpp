@@ -30,9 +30,9 @@ const int framesPerSecond = 60;
 void drawSim(Window* win, Environment* env){
 	win->clear();
 	// draw all objs
-	for (const Object& obj: env->getObjList()){
-		Vec pos(obj.getBBox()->getPos());
-		win->drawCircleGradient(Colors::red, Colors::white, pos.x(), pos.y(), obj.getBBox()->getW()/2);
+	for (auto& obj: env->getObjList()){
+		Vec pos(obj.second.getBBox()->getPos());
+		win->drawCircleGradient(Colors::red, Colors::white, pos.x(), pos.y(), obj.second.getBBox()->getW()/2);
 	}
 	win->update();
 }
@@ -112,10 +112,10 @@ bool handleInput(SDL_Event event, Window* win, Environment* env, CtrlSet& ctrls)
 			// 	}
 			// }
 			if (!ctrlAtLocation){
-				for (Object& obj: env->getObjList()){
-					if (obj.getBBox()->containsPoint(mousePosition)){
+				for (auto& obj: env->getObjList()){
+					if (obj.second.getBBox()->containsPoint(mousePosition)){
 						objAtLocation = true;
-						obj.setSelectState(true);
+						obj.second.setSelectState(true);
 						break;
 					}
 				}
@@ -142,10 +142,10 @@ bool handleInput(SDL_Event event, Window* win, Environment* env, CtrlSet& ctrls)
 			// 		break;
 			// 	}
 			// }
-			for (Object& obj: env->getObjList()){
-				if (obj.getBBox()->containsPoint(mousePosition)){
+			for (auto& obj: env->getObjList()){
+				if (obj.second.getBBox()->containsPoint(mousePosition)){
 					objAtLocation = true;
-					obj.setSelectState(false);
+					obj.second.setSelectState(false);
 					break;
 				}
 			}
@@ -172,11 +172,11 @@ bool handleInput(SDL_Event event, Window* win, Environment* env, CtrlSet& ctrls)
 			// 	}
 			// }
 			if (!ctrlAtLocation){
-				for (Object& obj: env->getObjList()){
-					if (obj.getBBox()->containsPoint(mousePosition) && obj.getSelectState()){
+				for (auto& obj: env->getObjList()){
+					if (obj.second.getBBox()->containsPoint(mousePosition) && obj.second.getSelectState()){
 						objAtLocation = true;
-		            	obj.setPos(Vec(mousePosition));
-		                obj.setVel(Vec((event.motion.xrel) * (pixelsPerMeter * pixelsPerMeter / framesPerSecond),
+		            	obj.second.setPos(Vec(mousePosition));
+		                obj.second.setVel(Vec((event.motion.xrel) * (pixelsPerMeter * pixelsPerMeter / framesPerSecond),
 		                				   (event.motion.yrel) * (pixelsPerMeter * pixelsPerMeter / framesPerSecond), true));
 						break;
 					}
