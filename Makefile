@@ -1,14 +1,16 @@
-TARGET=gravitySim
+TARGET=gravitysim
 
-OBJ=gravitySim.o window.o 2DPhysEnv.o object.o 2DVec.o imageTools.o bbox.o circle.o rectangle.o control.o
+OBJ=gravitySim.o 2DPhysEnv.o object.o 2DVec.o graphicsTools.o bbox.o circle.o rectangle.o control.o
 OBJS=$(addprefix $(BIN), $(OBJ))
 
-LINK=g++
+LINK=clang++
 LFLAGS=-lSDL2 -lSDL2_image -lSDL2_ttf
 
-CPP=g++
+CPP=clang++
 SRC=src/
 BIN=bin/
+
+.PHONY: all clean
 
 all: $(TARGET)
 
@@ -16,7 +18,7 @@ clean:
 	rm $(BIN)*.o
 
 $(TARGET): $(OBJS)
-	$(LINK) -std=c++11 -o $(TARGET) $(OBJS) $(LFLAGS)
+	$(LINK) -o $(TARGET) $(OBJS) $(LFLAGS)
 	
 $(BIN)%.o: $(SRC)%.cpp
-	$(CPP) -c $< -o $@
+	$(CPP) -std=c++17 -c $< -o $@

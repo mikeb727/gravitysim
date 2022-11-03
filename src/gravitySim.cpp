@@ -9,14 +9,14 @@
 #include <iostream>
 #include <map>
 
-#include "window.h"
+#include "graphicsTools.h"
 #include "control.h"
 #include "2DPhysEnv.h"
 
 using std::cerr;
 
 typedef std::map<std::string, Control> CtrlSet;
-typedef std::map<int, SDL_Color> ObjColorMap;
+typedef std::map<int, GraphicsTools::ColorRgba> ObjColorMap;
 
 /* The dimensions of the simulation window. */
 const int SCREENWIDTH = 1024;
@@ -30,13 +30,13 @@ const int framesPerSecond = 60;
 
 
 
-void drawSim(Window* win, Environment* env, ObjColorMap& ocm){
+void drawSim(GraphicsTools::Window* win, Environment* env, ObjColorMap& ocm){
 	win->clear();
 	// draw all objs
-  win->drawRectangle(SDL_Color{200, 180, 150, 255}, 0, 0, env->getBBox()->getW(), env->getBBox()->getH());
-	for (auto& obj: env->getObjList()){
-		Vec pos(obj.second.getBBox()->getPos());
-		win->drawCircleGradient(ocm[obj.first], ImageTools::blend(ocm[obj.first], 0.5, ImageTools::Colors::white, 0.5), pos.x(), pos.y(), obj.second.getBBox()->getW()/2);
+  	win->drawRectangle(GraphicsTools::ColorRgba{200, 180, 150, 255}, 0, 0, env->bbox()->w(), env->bbox()->h());
+	for (auto& obj: env->objs()){
+		Vec pos(obj.second.bbox()->pos());
+		win->drawCircleGradient(ocm[obj.first], GraphicsTools::blend(ocm[obj.first], 0.5, GraphicsTools::Colors::White, 0.5), pos.x(), pos.y(), obj.second.bbox()->w()/2);
 	}
 	win->update();
 }
@@ -45,7 +45,7 @@ void updateSim(Environment* env){
 	env->update();
 }
 
-bool handleInput(SDL_Event event, Window* win, Environment* env, CtrlSet& ctrls, ObjColorMap& ocm){
+bool handleInput(SDL_Event event, GraphicsTools::Window* win, Environment* env, CtrlSet& ctrls, ObjColorMap& ocm){
     // If the close button on the titlebar is clicked, signal to quit simulation
     if (event.type == SDL_QUIT){
         cerr << "Close button clicked\n";
@@ -59,39 +59,39 @@ bool handleInput(SDL_Event event, Window* win, Environment* env, CtrlSet& ctrls,
     // If the W key is pressed, increase elasticity of Objects created
     if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_w){
         ctrls["radius"].changeValue(1.0);
-		cerr << "Radius is " << ctrls["radius"].getValue() << "\n";
+		cerr << "ctrl radius " << ctrls["radius"].getValue() << "\n";
     }
     // If the Q key is pressed, decrease elasticity of Objects created
     if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_q){
         ctrls["radius"].changeValue(-1.0);
-		cerr << "Radius is " << ctrls["radius"].getValue() << "\n";
+		cerr << "ctrl radius " << ctrls["radius"].getValue() << "\n";
     }
     // If the S key is pressed, increase elasticity of Objects created
     if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_s){
         ctrls["elast"].changeValue(0.01);
-		cerr << "Elasticity is " << ctrls["elast"].getValue() << "\n";
+		cerr << "ctrl elast " << ctrls["elast"].getValue() << "\n";
     }
     // If the A key is pressed, decrease elasticity of Objects created
     if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_a){
         ctrls["elast"].changeValue(-0.01);
-		cerr << "Elasticity is " << ctrls["elast"].getValue() << "\n";
+		cerr << "ctrl elast " << ctrls["elast"].getValue() << "\n";
     }
 	//  velocity
 	if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_LEFT){
 		ctrls["velx"].changeValue(-5);
-		cerr << "Velocity is " << ctrls["velx"].getValue() << " " << ctrls["vely"].getValue() << "\n";
+		cerr << "ctrl vel " << ctrls["velx"].getValue() << " " << ctrls["vely"].getValue() << "\n";
 	}
 	if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_RIGHT){
 		ctrls["velx"].changeValue(5);
-		cerr << "Velocity is " << ctrls["velx"].getValue() << " " << ctrls["vely"].getValue() << "\n";
+		cerr << "ctrl vel " << ctrls["velx"].getValue() << " " << ctrls["vely"].getValue() << "\n";
 	}
 	if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_UP){
 		ctrls["vely"].changeValue(-5);
-		cerr << "Velocity is " << ctrls["velx"].getValue() << " " << ctrls["vely"].getValue() << "\n";
+		cerr << "ctrl vel " << ctrls["velx"].getValue() << " " << ctrls["vely"].getValue() << "\n";
 	}
 	if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_DOWN){
 		ctrls["vely"].changeValue(5);
-		cerr << "Velocity is " << ctrls["velx"].getValue() << " " << ctrls["vely"].getValue() << "\n";
+		cerr << "ctrl vel " << ctrls["velx"].getValue() << " " << ctrls["vely"].getValue() << "\n";
 	}
 
     // If the 'C' key is pressed, remove all objects
@@ -116,8 +116,8 @@ bool handleInput(SDL_Event event, Window* win, Environment* env, CtrlSet& ctrls,
 			// 	}
 			// }
 			if (!ctrlAtLocation){
-				for (auto& obj: env->getObjList()){
-					if (obj.second.getBBox()->containsPoint(mousePosition)){
+				for (auto& obj: env->objs()){
+					if (obj.second.bbox()->containsPoint(mousePosition)){
 						objAtLocation = true;
 						obj.second.setSelectState(true);
 						break;
@@ -126,8 +126,8 @@ bool handleInput(SDL_Event event, Window* win, Environment* env, CtrlSet& ctrls,
 			}
 		}
 		if (event.button.button == SDL_BUTTON_RIGHT){
-			for (int i = 0; i < env->getObjList().size(); i++){
-				if (env->getObjList()[i].getBBox()->containsPoint(mousePosition)){
+			for (int i = 0; i < env->objs().size(); i++){
+				if (env->objs()[i].bbox()->containsPoint(mousePosition)){
 					objAtLocation = true;
                     env->removeObj(i);
 					break;
@@ -146,17 +146,17 @@ bool handleInput(SDL_Event event, Window* win, Environment* env, CtrlSet& ctrls,
 			// 		break;
 			// 	}
 			// }
-			for (auto& obj: env->getObjList()){
-				if (obj.second.getBBox()->containsPoint(mousePosition)){
+			for (auto& obj: env->objs()){
+				if (obj.second.bbox()->containsPoint(mousePosition)){
 					objAtLocation = true;
 					obj.second.setSelectState(false);
 					break;
 				}
 			}
 			if (!objAtLocation && !ctrlAtLocation){
-				if (env->getBBox()->containsBBox(Circle(mousePosition, ctrls["radius"].getValue()))){
-					env->addObj(Object(new Circle(mousePosition, ctrls["radius"].getValue()), 1, mousePosition, Vec(ctrls["velx"].getValue(), ctrls["vely"].getValue(), true), ctrls["elast"].getValue()));
-					ocm[env->lastObjId()] = ImageTools::randomColor();
+				if (env->bbox()->containsBBox(Circle(mousePosition, ctrls["radius"].getValue()))){
+					env->addObj(Object(new Circle(mousePosition, ctrls["radius"].getValue()), 1, mousePosition, Vec(ctrls["velx"].getValue(), ctrls["vely"].getValue()), ctrls["elast"].getValue()));
+					ocm[env->lastObjId()] = GraphicsTools::randomColor();
 				}
 			}
         }
@@ -177,12 +177,12 @@ bool handleInput(SDL_Event event, Window* win, Environment* env, CtrlSet& ctrls,
 			// 	}
 			// }
 			if (!ctrlAtLocation){
-				for (auto& obj: env->getObjList()){
-					if (obj.second.getBBox()->containsPoint(mousePosition) && obj.second.getSelectState()){
+				for (auto& obj: env->objs()){
+					if (obj.second.bbox()->containsPoint(mousePosition) && obj.second.selected()){
 						objAtLocation = true;
-		            	obj.second.setPos(Vec(mousePosition));
+		            	obj.second.setPos(mousePosition);
 		                obj.second.setVel(Vec((event.motion.xrel) * (pixelsPerMeter * pixelsPerMeter / framesPerSecond),
-		                				   (event.motion.yrel) * (pixelsPerMeter * pixelsPerMeter / framesPerSecond), true));
+		                				   (event.motion.yrel) * (pixelsPerMeter * pixelsPerMeter / framesPerSecond)));
 						break;
 					}
 				}	
@@ -197,7 +197,7 @@ bool handleInput(SDL_Event event, Window* win, Environment* env, CtrlSet& ctrls,
 int main(int argc, char* argv[]){
 	
 	Environment* mainEnv;
-	Window* mainWindow;
+	GraphicsTools::Window* mainWindow;
 	CtrlSet mainCtrls;
 	ObjColorMap mainOcm;
 
@@ -206,17 +206,20 @@ int main(int argc, char* argv[]){
 	mainCtrls["velx"] = Control("X velocity", -500, 500, 0);
 	mainCtrls["vely"] = Control("Y velocity", -500, 500, 0);
 
+	GraphicsTools::InitGraphics();
+	GraphicsTools::InitText();
+
 	if (argc == 3){
-		mainWindow = new Window("Gravity Sim", atoi(argv[1]), atoi(argv[2]));
-		mainEnv = new Environment(atoi(argv[2]), atoi(argv[1]), Vec(0, 9.8 * pixelsPerMeter, true));
+		mainWindow = new GraphicsTools::Window("Gravity Sim", atoi(argv[1]), atoi(argv[2]));
+		mainEnv = new Environment(atoi(argv[2]), atoi(argv[1]), Vec(0, 9.8 * pixelsPerMeter));
 	}
 	else if (argc == 5){
-		mainWindow = new Window("Gravity Sim", atoi(argv[1]), atoi(argv[2]));
-		mainEnv = new Environment(atoi(argv[2]), atoi(argv[1]), Vec(atoi(argv[4]), atoi(argv[3]) * pixelsPerMeter, true));
+		mainWindow = new GraphicsTools::Window("Gravity Sim", atoi(argv[1]), atoi(argv[2]));
+		mainEnv = new Environment(atoi(argv[2]), atoi(argv[1]), Vec(atoi(argv[4]), atoi(argv[3]) * pixelsPerMeter));
 	}
 	else {
-		mainWindow = new Window("Gravity Sim", SCREENWIDTH, SCREENHEIGHT);
-		mainEnv = new Environment(SCREENHEIGHT, SCREENWIDTH, Vec(0, 9.8 * pixelsPerMeter, true));
+		mainWindow = new GraphicsTools::Window("Gravity Sim", SCREENWIDTH, SCREENHEIGHT);
+		mainEnv = new Environment(SCREENHEIGHT, SCREENWIDTH, Vec(0, 9.8 * pixelsPerMeter));
 	}
 
 	SDL_Event ev;
@@ -229,7 +232,7 @@ int main(int argc, char* argv[]){
 		}
         // Clear the screen
         // Update window
-		if (mainEnv->getT() % 60 == 0){
+		if (mainEnv->time() % 60 == 0){
 			mainEnv->print(std::cout);
 		}
 
@@ -238,6 +241,9 @@ int main(int argc, char* argv[]){
     }
     
     delete mainWindow; delete mainEnv;
+
+	GraphicsTools::CloseText();
+	GraphicsTools::CloseGraphics();
 
 	return 0;
 }

@@ -7,43 +7,42 @@
 
 class Circle : public BBox {
 public:
-	// ctor and dtor
-	Circle();
-	Circle(const Vec&, double);
-	~Circle();
+  // ctor and dtor
+  Circle();
+  Circle(const Vec &, double);
+  ~Circle();
 
-	// dimensions and position
-	double getH() const {return _h;};
-	double getW() const {return _w;};
-	double getR() const {return _r;};
-	const Vec& getPos() const {return _pos;};
-	void setPos(const Vec& newPos) {_pos = newPos;};
+  // dimensions
+  double h() const { return _h; };
+  double w() const { return _w; };
+  double radius() const { return _r; };
 
-	// key points
-	Vec center() const;
-	Vec top() const;
-	Vec topLeft() const;
-	Vec left() const;
-	Vec bottomLeft() const;
-	Vec bottom() const;
-	Vec bottomRight() const;
-	Vec right() const;
-	Vec topRight() const;
+  // key points
+  const Vec &pos() const { return _pos; };
+  Vec center() const;
+  Vec top() const;
+  Vec topLeft() const;
+  Vec left() const;
+  Vec bottomLeft() const;
+  Vec bottom() const;
+  Vec bottomRight() const;
+  Vec right() const;
+  Vec topRight() const;
 
-	// intersection operations
-	BBox* shift(const Vec&) const;
-	double distanceFrom(const BBox&) const;
-	bool containsPoint(const Vec&) const;
-	bool containsBBox(const BBox&) const;
-	bool intersects(const BBox&) const;
-	
-	// debug
-	void printAllPoints(std::ostream&) const;
+  void setPos(const Vec &newPos) { _pos = newPos; };
+
+  // intersection operations
+  BBox *shift(const Vec &) const;
+  double distanceFrom(const BBox &) const;
+  bool containsPoint(const Vec &) const;
+  bool containsBBox(const BBox &) const;
+  bool intersects(const BBox &) const;
+
+  // debug
+  void printAllPoints(std::ostream &) const;
 
 protected:
-	double _r; // circle radius
+  double _r; // circle radius
 };
-
-
 
 #endif

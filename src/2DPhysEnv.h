@@ -1,4 +1,4 @@
-/* A two-dimensional physics envrionment. */
+/* A two-dimensional physics environment. */
 
 #ifndef ENV2D_H
 #define ENV2D_H
@@ -7,74 +7,47 @@
 #include <map>
 
 #include "2DVec.h"
-#include "rectangle.h"
 #include "object.h"
+#include "rectangle.h"
 
+// each object has a unique ID (allows per-object colors
+// if visualization is used)
 typedef std::map<int, Object> EnvObjSet;
 
 class Environment {
-
 public:
+  // ctor, dtor
+  Environment(); // dimensions and gravity zero
+  Environment(double width, double height, const Vec &gravity);
+  ~Environment();
 
-    /* Creates an environment with height and width both set
-        to zero. */
-    Environment();
-    /* Creates an environment with dimensions and gravity
-        specified. */
-    Environment(double width, double height, const Vec& gravity);
+  // getters
+  const Vec &gravity() const { return _g; };
+  EnvObjSet &objs() { return _objs; };
+  int time() const { return t; };
+  const BBox *bbox() const { return _bbox; };
 
-    /* Destroys an environment. */
-    ~Environment();
+  // object operations
+  void addObj(const Object &obj) { _objs.emplace(nextObjId++, obj); };
+  void removeObj(int id) { _objs.erase(id); };
+  int lastObjId() const { return nextObjId - 1; };
+  void clearObjs() { _objs.clear(); };
 
-    /* Returns the environment's gravity. */
-    const Vec& getG() const {return _g;};
+  // simulation operations
+  void togglePause() { _paused = _paused ? false : true; };
+  void moveObjs();
+  void update(); // move objects and increment time
 
-    /* Returns the list of objects. */
-    EnvObjSet& getObjList() {return _objs;};
+  // debug
+  void print(std::ostream &out) const;
 
-    /* Returns the time the environment has
-        run in the simulation. */
-    int getT() const {return t;};
-
-    const BBox* getBBox() const {return _bbox;};
-    
-    /* Adds an object to the environment. */
-    void addObj(const Object& newObj);
-
-    int lastObjId() const {return nextObjId-1;};
-
-    /* Removes an object from the environment. */
-    void removeObj(int objId);
-
-    /* Clears all objects from the environment. */
-    void clearObjs() {_objs.clear();};
-
-    /* Toggles the run state */
-    void togglePause() {_paused = _paused ? false : true;};
-
-    /* Moves all the objects in the environment. */
-    void moveObjs();
-
-    /* Updates the environment, by moving all the
-        objects and redrawing them at their new
-        locations, and incrementing the run
-        time. */
-    void update();
-
-    /* Prints all available information about the
-        environment to the output given. */
-    void print(std::ostream& dest) const;
-    
 private:
-    
-	BBox* _bbox; // environment boundary
-    int t; // simulation time
-    Vec _g; // environment gravity
-    bool _paused; // environment run state
-    EnvObjSet _objs; // set of objects
-    int nextObjId;
-
+  BBox *_bbox;     // environment boundary
+  int t;           // simulation time
+  Vec _g;          // environment gravity
+  bool _paused;    // environment run state
+  EnvObjSet _objs; // set of objects
+  int nextObjId;
 };
-
 
 #endif
