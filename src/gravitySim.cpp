@@ -9,7 +9,7 @@
 #include <iostream>
 #include <map>
 
-#include "graphicsTools.h"
+#include "mbgfx.h"
 #include "control.h"
 #include "2DPhysEnv.h"
 
@@ -233,7 +233,7 @@ int main(int argc, char* argv[]){
         // Clear the screen
         // Update window
 		if (mainEnv->time() % 60 == 0){
-			mainEnv->print(std::cout);
+		//	mainEnv->print(std::cout);
 		}
 
 		updateSim(mainEnv);

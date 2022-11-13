@@ -4,76 +4,69 @@
 
 #include "2DVec.h"
 
-Vec::Vec() : magnitude(0), direction(0) {}
+Vec::Vec() : _x(0), _y(0) {}
 
 Vec::Vec(double x, double y, VecMode mode) {
-  if (mode == Component) {
-    magnitude = sqrt(pow(x, 2) + pow(y, 2));
-    direction = atan2(y, x);
+  if (mode == MagDir) {
+    // using x as mag, y as dir
+    _x = x * cos(y);
+    _y = x * sin(y);
   } else {
-    magnitude = x;
-    direction = y;
+    _x = x;
+    _y = y;
   }
 }
 
 Vec::Vec(const Vec &v) {
-  magnitude = v.magnitude;
-  direction = v.direction;
+  _x = v._x;
+  _y = v._y;
 }
 
 Vec &Vec::operator=(const Vec &v) {
   if (this != &v) {
-    magnitude = v.magnitude;
-    direction = v.direction;
+    _x = v._x;
+    _y = v._y;
   }
   return *this;
 }
 
 Vec::~Vec() {}
 
-double Vec::x() const { return magnitude * cos(direction); }
+double Vec::mag() const { return sqrt(pow(_x, 2) + pow(_y, 2)); }
 
-double Vec::y() const { return magnitude * sin(direction); }
+double Vec::dir() const { return atan2(_y, _x); }
 
-Vec Vec::unit() const { return Vec(x() / magnitude, y() / magnitude, Component); }
+Vec Vec::unit() const { return Vec(1, atan2(_y, _x), MagDir); }
 
-Vec Vec::plus(const Vec &v) const {
-  return Vec(x() + v.x(), y() + v.y(), Component);
-}
+Vec Vec::plus(const Vec &v) const { return Vec(x() + v.x(), y() + v.y()); }
 Vec Vec::operator+(const Vec &v) const { return plus(v); }
 
-Vec Vec::minus(const Vec &v) const {
-  return Vec(x() - v.x(), y() - v.y(), Component);
-}
+Vec Vec::minus(const Vec &v) const { return Vec(x() - v.x(), y() - v.y()); }
 Vec Vec::operator-(const Vec &v) const { return minus(v); }
 
-Vec Vec::scalarMultiple(double k) const { return Vec(x() * k, y() * k, Component); }
+Vec Vec::scalarMultiple(double k) const { return Vec(x() * k, y() * k); }
 Vec Vec::operator*(double k) const { return scalarMultiple(k); }
 Vec operator*(double k, const Vec &v) { return v * k; }
 
-Vec Vec::operator/(double k) const { return Vec(x() / k, y() / k, Component); }
+Vec Vec::operator/(double k) const { return Vec(x() / k, y() / k); }
 
-Vec Vec::dot(const Vec &v) const { return Vec(x() * v.x(), y() * v.y(), Component); }
+Vec Vec::dot(const Vec &v) const { return Vec(x() * v.x(), y() * v.y()); }
 
-double Vec::cross(const Vec &v) const {
-  return (x() * v.y() - y() * v.x());
-}
+double Vec::cross(const Vec &v) const { return (x() * v.y() - y() * v.x()); }
 
-bool Vec::equals(const Vec &v) const {
-  return (magnitude == v.magnitude && direction == v.direction);
-}
+bool Vec::equals(const Vec &v) const { return (_x == v._x && _y == v._y); }
 bool Vec::operator==(const Vec &v) const { return (equals(v)); }
 
 void Vec::print(std::ostream &out, bool componentForm = true) const {
   if (componentForm) {
     out << "(" << x() << "," << y() << ")";
   } else {
-    out << "(mag " << magnitude << ", dir " << direction << ")";
+    out << "(mag " << _x << ", dir " << _y << ")";
   }
 }
 
 void Vec::debugPrint(std::ostream &out) const {
-  out << magnitude << ' ' << direction << ' ' << x() << ' ' << y();
+  out << _x << ' ' << _y << ' ' << x() << ' ' << y();
 }
 
 Vec euler(const Vec &v, const Vec &dv, double dt) { return v + (dv * dt); }

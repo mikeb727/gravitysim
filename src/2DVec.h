@@ -11,8 +11,8 @@ enum VecMode { Component, MagDir };
 
 class Vec {
 private:
-  double magnitude;
-  double direction;
+  double _x;
+  double _y;
 
 public:
   // ctor, dtor
@@ -23,10 +23,10 @@ public:
   ~Vec();
 
   // getters
-  double x() const;
-  double y() const;
-  double mag() const { return magnitude; };
-  double dir() const { return direction; };
+  double x() const { return _x; };
+  double y() const { return _y; };
+  double mag() const;
+  double dir() const;
   Vec unit() const; // unit vector in same direction
 
   // math operations
