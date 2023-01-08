@@ -54,7 +54,9 @@ Vec Vec::dot(const Vec &v) const { return Vec(x() * v.x(), y() * v.y()); }
 
 double Vec::cross(const Vec &v) const { return (x() * v.y() - y() * v.x()); }
 
-bool Vec::equals(const Vec &v) const { return (_x == v._x && _y == v._y); }
+bool Vec::equals(const Vec &v) const {
+  return fabs(_x - v._x) < 1e-10 && fabs(_y - v._y) < 1e-10;
+}
 bool Vec::operator==(const Vec &v) const { return (equals(v)); }
 
 void Vec::print(std::ostream &out, bool componentForm = true) const {
