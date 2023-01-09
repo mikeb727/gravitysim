@@ -4,8 +4,8 @@
 Environment::Environment() : t(0) {}
 
 Environment::Environment(double width, double height, const Vec &gravity)
-    : _bbox(new Rectangle(Vec(0, 0), width, height)), t(0), _g(gravity), _paused(false),
-      nextObjId(0) {
+    : _bbox(new Rectangle(Vec(0, 0), width, height)), t(0), _g(gravity),
+      _paused(false), nextObjId(0) {
   std::cerr << "env create dim " << _bbox->w() << "x" << _bbox->h()
             << " gravity " << _g << "\n";
 }

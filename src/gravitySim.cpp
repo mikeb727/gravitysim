@@ -126,10 +126,10 @@ bool handleInput(SDL_Event event, GraphicsTools::Window* win, Environment* env, 
 			}
 		}
 		if (event.button.button == SDL_BUTTON_RIGHT){
-			for (int i = 0; i < env->objs().size(); i++){
-				if (env->objs()[i].bbox()->containsPoint(mousePosition)){
+			for (auto& obj: env->objs()){
+				if (obj.second.bbox()->containsPoint(mousePosition)){
 					objAtLocation = true;
-                    env->removeObj(i);
+                    env->removeObj(obj.first);
 					break;
 				}
 			}		
@@ -233,7 +233,7 @@ int main(int argc, char* argv[]){
         // Clear the screen
         // Update window
 		if (mainEnv->time() % 60 == 0){
-		//	mainEnv->print(std::cout);
+			mainEnv->print(std::cout);
 		}
 
 		updateSim(mainEnv);
