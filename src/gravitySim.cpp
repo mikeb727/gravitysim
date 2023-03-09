@@ -9,7 +9,7 @@
 #include <iostream>
 #include <map>
 
-#include "mbgfx.h"
+#include "mb-libs/mbgfx.h"
 #include "control.h"
 #include "2DPhysEnv.h"
 

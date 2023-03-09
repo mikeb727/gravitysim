@@ -4,7 +4,7 @@ OBJ=gravitySim.o 2DPhysEnv.o object.o 2DVec.o bbox.o circle.o rectangle.o contro
 OBJS=$(addprefix $(BIN), $(OBJ))
 
 LINK=clang++
-LFLAGS=-lmbgfx -lSDL2 -lSDL2_image -lSDL2_ttf
+LFLAGS=-L/usr/lib/mb-libs -lmbgfx -lSDL2 -lSDL2_image -lSDL2_ttf
 
 CPP=clang++
 SRC=src/
