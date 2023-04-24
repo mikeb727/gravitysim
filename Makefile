@@ -4,7 +4,9 @@ OBJ=gravitySim.o 2DPhysEnv.o object.o 2DVec.o bbox.o circle.o rectangle.o contro
 OBJS=$(addprefix $(BIN), $(OBJ))
 
 LINK=clang++
-LFLAGS=-L/usr/lib/mb-libs -lmbgfx -lSDL2 -lSDL2_image -lSDL2_ttf
+LFLAGS=-L/usr/lib/mb-libs -lmbgfx -lSDL2 -lGL -lglfw -lfreetype
+
+DFLAGS=-g -O0 
 
 CPP=clang++
 SRC=src/
@@ -23,4 +25,4 @@ $(TARGET): $(OBJS)
 	
 $(BIN)%.o: $(SRC)%.cpp
 	mkdir -p $(BIN)
-	$(CPP) -std=c++17 -c $< -o $@
+	$(CPP) -std=c++17 $(DFLAGS) -I/usr/include/freetype2 -c $< -o $@
