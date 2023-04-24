@@ -35,9 +35,9 @@ public:
 
 protected:
   BBox();
-  BBox(const Vec &pos, double height, double width);
-  double _h; // bounding box height
+  BBox(const Vec &pos, double width, double height);
   double _w; // bounding box width
+  double _h; // bounding box height
   Vec _pos;  // bounding box position
 };
 

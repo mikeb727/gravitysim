@@ -7,12 +7,12 @@ class Rectangle : public BBox {
 public:
   // ctor, dtor
   Rectangle();
-  Rectangle(const Vec &, double, double);
+  Rectangle(const Vec &pos, double width, double height);
   ~Rectangle();
 
   // dimensions
-  double h() const { return _h; };
   double w() const { return _w; };
+  double h() const { return _h; };
   const Vec &pos() const { return _pos; };
   void setPos(const Vec &newPos) { _pos = newPos; };
 

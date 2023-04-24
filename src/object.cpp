@@ -1,9 +1,6 @@
 #include "object.h"
 #include <cmath>
 
-/* The speed of the simulation, in frames per second. */
-const int framesPerSecond = 60;
-
 Object::Object()
     : _bbox(new Circle(Vec(0, 0), 10)), _m(1), _elast(0), objType("Object") {}
 
@@ -17,10 +14,10 @@ Object::Object(BBox *bounds, double mass, const Vec &position,
 
 Object::~Object() { std::cerr << "obj delete pos " << _bbox->pos() << "\n"; }
 
-bool Object::collidesWith(const Object &otherObj) const {
+bool Object::collidesWith(double dt, const Object &otherObj) const {
   if (this == &otherObj)
     return false;
-  return nextBBox()->intersects(*otherObj.nextBBox());
+  return nextBBox(dt)->intersects(*otherObj.nextBBox(dt));
 }
 
 void Object::resolveCollision(Object &otherObj) {
@@ -33,18 +30,18 @@ void Object::resolveCollision(Object &otherObj) {
       _elast * Vec((_m * sumVel / sumMass), resultAngle + M_PI, MagDir);
 }
 
-Vec Object::nextPos() const {
-  return rk4(_bbox->pos(), _vel, _accel, (1.0 / framesPerSecond));
+Vec Object::nextPos(double dt) const {
+  return rk4(_bbox->pos(), _vel, _accel, dt);
 }
 
-BBox *Object::nextBBox() const {
-  return _bbox->shift(nextPos() - _bbox->pos());
+BBox *Object::nextBBox(double dt) const {
+  return _bbox->shift(nextPos(dt) - _bbox->pos());
 }
 
-void Object::move(bool reverseH = false, bool reverseV = false) {
-  _vel = rk4(_vel, _accel, Vec(0, 0), (1.0 / framesPerSecond));
+void Object::move(double dt, bool reverseH, bool reverseV) {
+  _vel = rk4(_vel, _accel, Vec(0, 0), dt);
   reverseDirection(reverseH, reverseV);
-  _bbox->setPos(nextPos());
+  _bbox->setPos(nextPos(dt));
 }
 
 void Object::reverseDirection(bool h, bool v) {

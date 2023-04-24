@@ -1,7 +1,7 @@
 #include "rectangle.h"
 
 Rectangle::Rectangle(){};
-Rectangle::Rectangle(const Vec &p, double h, double w) : BBox(p, h, w) {}
+Rectangle::Rectangle(const Vec &pos, double width, double height) : BBox(pos, width, height) {}
 Rectangle::~Rectangle() {}
 
 Vec Rectangle::center() const { return _pos + Vec(_w / 2, _h / 2); }

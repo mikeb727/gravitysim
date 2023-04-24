@@ -3,11 +3,12 @@
 
 Environment::Environment() : t(0) {}
 
-Environment::Environment(double width, double height, const Vec &gravity)
+Environment::Environment(double width, double height, const Vec &gravity,
+                         double timeStep)
     : _bbox(new Rectangle(Vec(0, 0), width, height)), t(0), _g(gravity),
-      _paused(false), nextObjId(0) {
+      _paused(false), nextObjId(0), _dt(timeStep) {
   std::cerr << "env create dim " << _bbox->w() << "x" << _bbox->h()
-            << " gravity " << _g << "\n";
+            << " gravity " << _g << " dt " << _dt << "\n";
 }
 
 Environment::~Environment() {
@@ -21,7 +22,7 @@ void Environment::moveObjs() {
     for (auto &obj2 : _objs) {
       if (obj1.first != obj2.first &&
           obj1.second.bbox()->distanceFrom(*obj2.second.bbox()) < 200) {
-        if (obj1.second.collidesWith(obj2.second)) {
+        if (obj1.second.collidesWith(_dt, obj2.second)) {
           obj1.second.resolveCollision(obj2.second);
         }
       }
@@ -32,10 +33,10 @@ void Environment::moveObjs() {
     if (!obj.second.selected()) {
       obj.second.setAccel(_g);
       /* reverse if any part of the object would leave the environment */
-      obj.second.move(!(_bbox->containsPoint(obj.second.nextBBox()->left()) &&
-                        _bbox->containsPoint(obj.second.nextBBox()->right())),
-                      !(_bbox->containsPoint(obj.second.nextBBox()->top()) &&
-                        _bbox->containsPoint(obj.second.nextBBox()->bottom())));
+      obj.second.move(_dt, !(_bbox->containsPoint(obj.second.nextBBox(_dt)->left()) &&
+                        _bbox->containsPoint(obj.second.nextBBox(_dt)->right())),
+                      !(_bbox->containsPoint(obj.second.nextBBox(_dt)->top()) &&
+                        _bbox->containsPoint(obj.second.nextBBox(_dt)->bottom())));
     }
   }
 }

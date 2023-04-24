@@ -18,13 +18,14 @@ class Environment {
 public:
   // ctor, dtor
   Environment(); // dimensions and gravity zero
-  Environment(double width, double height, const Vec &gravity);
+  Environment(double width, double height, const Vec &gravity, double timeStep);
   ~Environment();
 
   // getters
   const Vec &gravity() const { return _g; };
   EnvObjSet &objs() { return _objs; };
   int time() const { return t; };
+  double dt() const {return _dt; };
   const BBox *bbox() const { return _bbox; };
 
   // object operations
@@ -36,7 +37,8 @@ public:
   // simulation operations
   void togglePause() { _paused = _paused ? false : true; };
   void moveObjs();
-  void update(); // move objects and increment time
+  void update(); // move objects and increment time (scale
+                 // factor to account for frame rates)
 
   // debug
   void print(std::ostream &out) const;
@@ -44,6 +46,7 @@ public:
 private:
   BBox *_bbox;     // environment boundary
   int t;           // simulation time
+  double _dt;       // time step
   Vec _g;          // environment gravity
   bool _paused;    // environment run state
   EnvObjSet _objs; // set of objects

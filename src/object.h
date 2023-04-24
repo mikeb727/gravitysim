@@ -33,11 +33,12 @@ public:
   void setSelectState(bool state) { _selected = state; };
 
   // physics/motion operations
-  BBox *nextBBox() const; // object bbox at next time step
+  BBox *nextBBox(double dt) const; // object bbox at next time step
   bool collidesWith(
+      double dt,
       const Object &obj) const; // whether bbox collides with other object's
   void resolveCollision(Object &obj);
-  void move(bool reverseX, bool reverseY);
+  void move(double dt, bool reverseX = false, bool reverseY = false);
   void reverseDirection(bool x, bool y);
 
   // debug
@@ -52,8 +53,9 @@ private:
   double _m;     // object mass
   double _elast; // ratio of pre- to post- collision velocity
 
-  bool _selected;      // selected objects will not move
-  Vec nextPos() const; // position of object at next time step; used internally
+  bool _selected; // selected objects will not move
+  Vec nextPos(
+      double dt) const; // position of object at next time step; used internally
 };
 
 #endif

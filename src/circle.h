@@ -9,7 +9,7 @@ class Circle : public BBox {
 public:
   // ctor and dtor
   Circle();
-  Circle(const Vec &, double);
+  Circle(const Vec &pos, double r);
   ~Circle();
 
   // dimensions
