@@ -21,13 +21,17 @@ bool Object::collidesWith(double dt, const Object &otherObj) const {
 }
 
 void Object::resolveCollision(Object &otherObj) {
-  double sumVel = _vel.mag() + otherObj._vel.mag();
+  // see
+  // https://en.wikipedia.org/wiki/Elastic_collision#Two-dimensional_collision_with_two_moving_objects
+  Vec velocityDiff = _vel - otherObj._vel;
+  Vec positionDiff = _bbox->pos() - otherObj._bbox->pos();
   double sumMass = _m + otherObj._m;
-  Vec collVec = otherObj._bbox->pos() - _bbox->pos();
-  double resultAngle = _vel.dir() + ((collVec.dir() - _vel.dir()) * 2) + M_PI;
-  _vel = _elast * Vec((otherObj._m * sumVel / sumMass), resultAngle, MagDir);
-  otherObj._vel =
-      _elast * Vec((_m * sumVel / sumMass), resultAngle + M_PI, MagDir);
+  double correctionMult = 0.995;
+  _vel = correctionMult * (_vel - (((2.0 * otherObj._m) / sumMass) *
+                 (velocityDiff.dot(positionDiff) / pow(positionDiff.mag(), 2)) * positionDiff));
+  otherObj._vel = correctionMult * (otherObj._vel - (((2.0 * _m) / sumMass) *
+                 (-velocityDiff.dot(-positionDiff) / pow(positionDiff.mag(), 2)) * -positionDiff));
+
 }
 
 Vec Object::nextPos(double dt) const {

@@ -112,7 +112,7 @@ void mouseButtonCallback(GLFWwindow *win, int button, int action, int mods) {
       if (env->bbox()->containsBBox(
               Circle(cursorPos, ctrls->at("radius").getValue()))) {
         env->addObj(Object(
-            new Circle(cursorPos, ctrls->at("radius").getValue()), 1, cursorPos,
+            new Circle(cursorPos, ctrls->at("radius").getValue()), pow(ctrls->at("radius").getValue(), 3), cursorPos,
             Vec(ctrls->at("velx").getValue(), ctrls->at("vely").getValue()),
             ctrls->at("elast").getValue()));
 
