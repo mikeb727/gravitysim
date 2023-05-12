@@ -8,18 +8,22 @@ SimParameters parseXml(std::string fileName) {
   SimParameters result = defaultParams;
 
   tinyxml2::XMLDocument paramsXml;
-  paramsXml.LoadFile(fileName.c_str());
+  if (paramsXml.LoadFile(fileName.c_str())) {
+    std::cerr << "warning: could not open \"" << fileName
+              << "\"; using default parameters\n";
+    return result;
+  };
   result.frameRate = paramsXml.FirstChildElement("gravitysim")
                          ->FirstChildElement("environment")
                          ->FirstChildElement("frameRate")
                          ->IntAttribute("value");
-  result.envDimensions = Vec(paramsXml.FirstChildElement("gravitysim")
-                                 ->FirstChildElement("environment")
-                                 ->FirstChildElement("boundary")
-                                 ->DoubleAttribute("width"),
-                             paramsXml.FirstChildElement("gravitysim")
-                                 ->FirstChildElement("environment")
-                                 ->FirstChildElement("boundary")
-                                 ->DoubleAttribute("height"));
+  tinyxml2::XMLElement *envNode = paramsXml.FirstChildElement("gravitysim")
+                                      ->FirstChildElement("environment");
+  result.envDimensions =
+      Vec(envNode->FirstChildElement("boundary")->DoubleAttribute("width"),
+          envNode->FirstChildElement("boundary")->DoubleAttribute("height"));
+  result.envGravity =
+      Vec(envNode->FirstChildElement("gravity")->DoubleAttribute("x"),
+          envNode->FirstChildElement("gravity")->DoubleAttribute("y"));
   return result;
 }
