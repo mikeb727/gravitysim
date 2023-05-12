@@ -47,10 +47,11 @@ Vec Vec::operator-(const Vec &v) const { return minus(v); }
 Vec Vec::scalarMultiple(double k) const { return Vec(x() * k, y() * k); }
 Vec Vec::operator*(double k) const { return scalarMultiple(k); }
 Vec operator*(double k, const Vec &v) { return v * k; }
+Vec Vec::operator-() const { return scalarMultiple(-1); }
 
 Vec Vec::operator/(double k) const { return Vec(x() / k, y() / k); }
 
-Vec Vec::dot(const Vec &v) const { return Vec(x() * v.x(), y() * v.y()); }
+double Vec::dot(const Vec &v) const { return x() * v.x() + y() * v.y(); }
 
 double Vec::cross(const Vec &v) const { return (x() * v.y() - y() * v.x()); }
 

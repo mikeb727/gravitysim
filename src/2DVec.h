@@ -37,7 +37,8 @@ public:
   Vec scalarMultiple(double k) const;
   Vec operator*(double k) const;
   Vec operator/(double k) const;
-  Vec dot(const Vec &v) const;
+  Vec operator-() const;
+  double dot(const Vec &v) const;
   double cross(const Vec &v) const; // scalar in two-dimensional case
   bool equals(const Vec &v) const;
   bool operator==(const Vec &v) const;
