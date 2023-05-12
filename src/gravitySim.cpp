@@ -6,27 +6,19 @@
     can grab and throw objects by holding down
     the left mouse button and moving the mouse. */
 
-#include <iostream>
-#include <map>
-
 #include "2DPhysEnv.h"
 #include "control.h"
+#include "simParams.h"
+
 #include <argparse/argparse.hpp>
 #include <mb-libs/mbgfx.h>
+
+#include <iostream>
+#include <map>
 #include <sstream>
 
 typedef std::map<std::string, Control> CtrlSet;
 typedef std::map<int, GraphicsTools::RenderObject> ObjMap;
-
-/* The dimensions of the simulation window. */
-const int ENV_WIDTH = 1024;
-const int ENV_HEIGHT = 768;
-
-/* The scale of the simulation, in pixels per meter. */
-const double pixelsPerMeter = 120;
-
-/* The speed of the simulation, in frames per second. */
-const int framesPerSecond = 60;
 
 // previous cursor positions (for dragging velocity calculation)
 double cursorPosPrevX, cursorPosPrevY;
@@ -125,7 +117,7 @@ void mouseButtonCallback(GLFWwindow *win, int button, int action, int mods) {
             ctrls->at("elast").getValue()));
 
         GraphicsTools::Material mat = {GraphicsTools::randomColor(), NULL,
-                                       0.5*GraphicsTools::Colors::White, 4};
+                                       0.5 * GraphicsTools::Colors::White, 4};
         om->emplace(env->lastObjId(), GraphicsTools::RenderObject());
         om->at(env->lastObjId()).setShader(shader);
         om->at(env->lastObjId()).setMaterial(mat);
@@ -233,23 +225,14 @@ bool handleInput(GraphicsTools::Window *win) {
 int main(int argc, char *argv[]) {
 
   argparse::ArgumentParser argParser("gravity_sim");
-  argParser.add_argument("-d", "--dimensions")
-      .default_value(std::vector<int>({ENV_WIDTH, ENV_HEIGHT}))
-      .nargs(2)
-      .scan<'d', int>();
-  argParser.add_argument("-g", "--gravity")
-      .default_value(std::vector<double>({0, 9.8}))
-      .nargs(2)
-      .scan<'g', double>();
+  argParser.add_argument("-c", "--config").default_value("").nargs(1);
   argParser.parse_args(argc, argv);
-  std::vector<int> envDimensions =
-      argParser.get<std::vector<int>>("--dimensions");
-  std::vector<double> envGravity =
-      argParser.get<std::vector<double>>("--gravity");
 
-  Environment mainEnv(envDimensions[0], envDimensions[1],
-                      Vec(envGravity[0], envGravity[1]) * pixelsPerMeter,
-                      0.5 / framesPerSecond);
+  SimParameters paramSet = parseXml(argParser.get<std::string>("--config"));
+
+  Environment mainEnv(paramSet.envDimensions.x(), paramSet.envDimensions.y(),
+                      paramSet.envGravity * paramSet.envScale,
+                      0.5 / paramSet.frameRate);
 
   CtrlSet mainCtrls;
   mainCtrls["radius"] = Control("Radius", 15, 100, 40);
@@ -258,8 +241,8 @@ int main(int argc, char *argv[]) {
   mainCtrls["vely"] = Control("Y velocity", -1000, 1000, 0);
 
   GraphicsTools::InitGraphics();
-  GraphicsTools::Window mainWindow("Gravity Sim", envDimensions[0],
-                                   envDimensions[1]);
+  GraphicsTools::Window mainWindow("Gravity Sim", paramSet.envDimensions.x(),
+                                   paramSet.envDimensions.y());
   mainWindow.setClearColor({0.8, 0.7, 0.6, 1.0});
   ObjMap mainOM;
 
@@ -282,9 +265,9 @@ int main(int argc, char *argv[]) {
   sc.setActiveCamera(0);
 
   GraphicsTools::DirectionalLight light2 = {
-      glm::normalize(glm::vec3(0, -0.2, -1)), 0.5 * GraphicsTools::Colors::White,
-      GraphicsTools::Colors::White, 0.1 * GraphicsTools::Colors::White,
-      &phongShader};
+      glm::normalize(glm::vec3(0, -0.2, -1)),
+      0.5 * GraphicsTools::Colors::White, GraphicsTools::Colors::White,
+      0.1 * GraphicsTools::Colors::White, &phongShader};
   sc.setDirLight(&light2);
 
   glfwSetKeyCallback(mainWindow.glfwWindow(), keyCallback);
