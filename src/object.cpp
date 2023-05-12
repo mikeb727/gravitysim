@@ -30,7 +30,7 @@ void Object::resolveCollision(Object &otherObj) {
   _vel = correctionMult * (_vel - (((2.0 * otherObj._m) / sumMass) *
                  (velocityDiff.dot(positionDiff) / pow(positionDiff.mag(), 2)) * positionDiff));
   otherObj._vel = correctionMult * (otherObj._vel - (((2.0 * _m) / sumMass) *
-                 (-velocityDiff.dot(-positionDiff) / pow(positionDiff.mag(), 2)) * -positionDiff));
+                 (velocityDiff.dot(positionDiff) / pow(positionDiff.mag(), 2)) * -positionDiff));
 
 }
 
