@@ -20,7 +20,7 @@
 typedef std::map<std::string, Control> CtrlSet;
 typedef std::map<int, GraphicsTools::RenderObject> ObjMap;
 
-// global parameters - accessible to all objects
+// global parameters; used by all objects after initialization
 SimParameters simParams;
 
 // previous cursor positions (for dragging velocity calculation)
@@ -29,11 +29,11 @@ double cursorPosPrevX, cursorPosPrevY;
 void drawSim(GraphicsTools::Window *win) {
   Environment *env = static_cast<Environment *>(win->userPointer("env"));
   ObjMap *ocm = static_cast<ObjMap *>(win->userPointer("objmap"));
-
   CtrlSet *ctrls = static_cast<CtrlSet *>(win->userPointer("ctrlset"));
   GraphicsTools::Font *font =
       static_cast<GraphicsTools::Font *>(win->userPointer("font"));
 
+  // for drawing custom cursor
   double cursorPosX, cursorPosY;
   glfwGetCursorPos(win->glfwWindow(), &cursorPosX, &cursorPosY);
 
@@ -45,6 +45,7 @@ void drawSim(GraphicsTools::Window *win) {
     ocm->at(obj.first).setPos(glm::vec3(drawPosX, drawPosY, 0.0f));
   }
 
+  // generate on-screen status text
   std::ostringstream ctrlStatus;
   ctrlStatus << "radius " << ctrls->at("radius").getValue() << "\nvelocity "
              << ctrls->at("velx").getValue() << " "
@@ -52,18 +53,21 @@ void drawSim(GraphicsTools::Window *win) {
              << ctrls->at("elast").getValue();
   // draw all objs
 
-  GraphicsTools::ColorRgba cursorColor;
-  if (env->bbox()->containsBBox(Circle(Vec(cursorPosX, cursorPosY),
-                                       ctrls->at("radius").getValue()))) {
-    cursorColor = {0, 0, 0, 0.3};
-  } else {
-    cursorColor = {0.6, 0, 0, 0.3};
-  };
+  // custom cursor - circle showing where new ball is placed
+  // red if ball cannot be placed at cursor
+  GraphicsTools::ColorRgba cursorColor =
+      env->bbox()->containsBBox(
+          Circle(Vec(cursorPosX, cursorPosY), ctrls->at("radius").getValue()))
+          ? GraphicsTools::ColorRgba({0, 0, 0, 0.3})
+          : GraphicsTools::ColorRgba({0.6, 0, 0, 0.3});
 
   win->clear();
+  // objects
   win->activeScene()->render();
+  // status string
   win->activeScene()->drawText2D(*font, ctrlStatus.str(),
                                  GraphicsTools::Colors::Black, 50, 250, -1, 1);
+  // cursor
   win->activeScene()->drawCircle2D(cursorColor, cursorPosX,
                                    win->height() - cursorPosY,
                                    ctrls->at("radius").getValue());
@@ -192,18 +196,18 @@ void cursorPosCallback(GLFWwindow *win, double x, double y) {
   cursorPosPrevY = cursorPosY;
 }
 
-bool handleInput(GraphicsTools::Window *win) {
+bool handleKeyStates(GraphicsTools::Window *win) {
   Environment *env = static_cast<Environment *>(win->userPointer("env"));
   CtrlSet *ctrls = static_cast<CtrlSet *>(win->userPointer("ctrlset"));
   GraphicsTools::Scene *sc = win->activeScene();
-  // If the W key is pressed, increase elasticity of Objects created
+  // If the W key is pressed, increase radius of Objects created
   if (glfwGetKey(win->glfwWindow(), GLFW_KEY_W)) {
-    ctrls->at("radius").changeValue(1.0);
+    ctrls->at("radius").changeValue(simParams.ctrlRadius[2]);
     std::cerr << "ctrl radius " << ctrls->at("radius").getValue() << "\n";
   }
-  // If the Q key is pressed, decrease elasticity of Objects created
+  // If the Q key is pressed, decrease radius of Objects created
   if (glfwGetKey(win->glfwWindow(), GLFW_KEY_Q)) {
-    ctrls->at("radius").changeValue(-1.0);
+    ctrls->at("radius").changeValue(-simParams.ctrlRadius[2]);
     std::cerr << "ctrl radius " << ctrls->at("radius").getValue() << "\n";
   }
   // If the S key is pressed, increase elasticity of Objects created
@@ -218,22 +222,22 @@ bool handleInput(GraphicsTools::Window *win) {
   }
   //  velocity
   if (glfwGetKey(win->glfwWindow(), GLFW_KEY_LEFT)) {
-    ctrls->at("velx").changeValue(-5);
+    ctrls->at("velx").changeValue(-simParams.ctrlVelX[2]);
     std::cerr << "ctrl vel " << ctrls->at("velx").getValue() << " "
               << ctrls->at("vely").getValue() << "\n";
   }
   if (glfwGetKey(win->glfwWindow(), GLFW_KEY_RIGHT)) {
-    ctrls->at("velx").changeValue(5);
+    ctrls->at("velx").changeValue(simParams.ctrlVelX[2]);
     std::cerr << "ctrl vel " << ctrls->at("velx").getValue() << " "
               << ctrls->at("vely").getValue() << "\n";
   }
   if (glfwGetKey(win->glfwWindow(), GLFW_KEY_UP)) {
-    ctrls->at("vely").changeValue(-5);
+    ctrls->at("vely").changeValue(-simParams.ctrlVelY[2]);
     std::cerr << "ctrl vel " << ctrls->at("velx").getValue() << " "
               << ctrls->at("vely").getValue() << "\n";
   }
   if (glfwGetKey(win->glfwWindow(), GLFW_KEY_DOWN)) {
-    ctrls->at("vely").changeValue(5);
+    ctrls->at("vely").changeValue(simParams.ctrlVelY[2]);
     std::cerr << "ctrl vel " << ctrls->at("velx").getValue() << " "
               << ctrls->at("vely").getValue() << "\n";
   }
@@ -247,20 +251,25 @@ int main(int argc, char *argv[]) {
   argParser.add_argument("-c", "--config").default_value("").nargs(1);
   argParser.parse_args(argc, argv);
 
-  simParams = parseXml(argParser.get<std::string>("--config"));
+  simParams = parseXmlConfig(argParser.get<std::string>("--config"));
 
   Environment mainEnv(simParams.envDimensions.x(), simParams.envDimensions.y(),
                       simParams.envGravity * simParams.envScale,
                       0.5 / simParams.frameRate);
+
   if (simParams.envPauseState == true) {
     mainEnv.togglePause();
   }
 
   CtrlSet mainCtrls;
-  mainCtrls["radius"] = Control("Radius", 15, 100, 40);
+  mainCtrls["radius"] =
+      Control("Radius", simParams.ctrlRadius[0], simParams.ctrlRadius[1],
+              simParams.ctrlRadius[3]);
+  mainCtrls["velx"] = Control("X velocity", simParams.ctrlVelX[0],
+                              simParams.ctrlVelX[1], simParams.ctrlVelX[3]);
+  mainCtrls["vely"] = Control("Y velocity", simParams.ctrlVelY[0],
+                              simParams.ctrlVelY[1], simParams.ctrlVelY[3]);
   mainCtrls["elast"] = Control("Elasticity", 0, 1, 1);
-  mainCtrls["velx"] = Control("X velocity", -1000, 1000, 0);
-  mainCtrls["vely"] = Control("Y velocity", -1000, 1000, 0);
 
   GraphicsTools::InitGraphics();
   GraphicsTools::Window mainWindow("Gravity Sim", simParams.envDimensions.x(),
@@ -301,7 +310,7 @@ int main(int argc, char *argv[]) {
   // While the program is running
   bool quit = false;
   while (!mainWindow.shouldClose()) {
-    handleInput(&mainWindow);
+    handleKeyStates(&mainWindow);
     updateSim(&mainEnv);
     drawSim(&mainWindow);
   }
