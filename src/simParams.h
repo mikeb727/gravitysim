@@ -10,10 +10,11 @@ struct SimParameters {
   Vec envDimensions;
   Vec envGravity;
   double envScale; // pixels per meter
+  double collisionCorrectionMultiplier;
 };
 
 const SimParameters defaultParams = {60, false, Vec(800, 600), Vec(0, 9.8),
-                                     120};
+                                     120, 1.0};
 SimParameters parseXml(std::string fileName);
 
 #endif

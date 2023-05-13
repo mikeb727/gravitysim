@@ -25,5 +25,12 @@ SimParameters parseXml(std::string fileName) {
   result.envGravity =
       Vec(envNode->FirstChildElement("gravity")->DoubleAttribute("x"),
           envNode->FirstChildElement("gravity")->DoubleAttribute("y"));
+  result.envPauseState =
+      envNode->FirstChildElement("paused")->BoolAttribute("value");
+  result.collisionCorrectionMultiplier =
+      paramsXml.FirstChildElement("gravitysim")
+          ->FirstChildElement("tuning")
+          ->FirstChildElement("collisionCorrectionMultiplier")
+          ->DoubleAttribute("value");
   return result;
 }

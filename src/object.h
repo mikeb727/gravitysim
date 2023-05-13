@@ -6,9 +6,12 @@
 
 #include "2DVec.h"
 #include "circle.h"
+#include "simParams.h"
 
 #include <cmath>
 #include <iostream>
+
+extern SimParameters simParams;
 
 class Object {
 public:

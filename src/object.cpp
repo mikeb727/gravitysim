@@ -1,5 +1,9 @@
 #include "object.h"
+#include "simParams.h"
+
 #include <cmath>
+
+extern SimParameters simParams;
 
 Object::Object()
     : _bbox(new Circle(Vec(0, 0), 10)), _m(1), _elast(0), objType("Object") {}
@@ -26,12 +30,16 @@ void Object::resolveCollision(Object &otherObj) {
   Vec velocityDiff = _vel - otherObj._vel;
   Vec positionDiff = _bbox->pos() - otherObj._bbox->pos();
   double sumMass = _m + otherObj._m;
-  double correctionMult = 0.995;
-  _vel = correctionMult * (_vel - (((2.0 * otherObj._m) / sumMass) *
-                 (velocityDiff.dot(positionDiff) / pow(positionDiff.mag(), 2)) * positionDiff));
-  otherObj._vel = correctionMult * (otherObj._vel - (((2.0 * _m) / sumMass) *
-                 (velocityDiff.dot(positionDiff) / pow(positionDiff.mag(), 2)) * -positionDiff));
-
+  _vel =
+      simParams.collisionCorrectionMultiplier *
+      (_vel - (((2.0 * otherObj._m) / sumMass) *
+               (velocityDiff.dot(positionDiff) / pow(positionDiff.mag(), 2)) *
+               positionDiff));
+  otherObj._vel =
+      simParams.collisionCorrectionMultiplier * (otherObj._vel - (((2.0 * _m) / sumMass) *
+                                         (velocityDiff.dot(positionDiff) /
+                                          pow(positionDiff.mag(), 2)) *
+                                         -positionDiff));
 }
 
 Vec Object::nextPos(double dt) const {
