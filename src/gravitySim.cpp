@@ -7,17 +7,18 @@
     the left mouse button and moving the mouse. */
 
 #include "2DPhysEnv.h"
+#include "2DVec.h"
 #include "control.h"
 #include "simParams.h"
 
 #include <argparse/argparse.hpp>
 #include <mb-libs/mbgfx.h>
 
+#include <cmath>
 #include <iostream>
 #include <map>
 #include <sstream>
 
-typedef std::map<std::string, Control> CtrlSet;
 typedef std::map<int, GraphicsTools::RenderObject> ObjMap;
 
 // global parameters; used by all objects after initialization
@@ -29,7 +30,7 @@ double cursorPosPrevX, cursorPosPrevY;
 void drawSim(GraphicsTools::Window *win) {
   Environment *env = static_cast<Environment *>(win->userPointer("env"));
   ObjMap *ocm = static_cast<ObjMap *>(win->userPointer("objmap"));
-  CtrlSet *ctrls = static_cast<CtrlSet *>(win->userPointer("ctrlset"));
+  ControlSet *ctrls = static_cast<ControlSet *>(win->userPointer("ctrlset"));
   GraphicsTools::Font *font =
       static_cast<GraphicsTools::Font *>(win->userPointer("font"));
 
@@ -37,27 +38,34 @@ void drawSim(GraphicsTools::Window *win) {
   double cursorPosX, cursorPosY;
   glfwGetCursorPos(win->glfwWindow(), &cursorPosX, &cursorPosY);
 
+  cursorPosX =
+      GraphicsTools::remap(cursorPosX, 0, env->bbox()->w(), 0, win->width());
+  cursorPosY =
+      GraphicsTools::remap(cursorPosY, 0, env->bbox()->h(), win->height(), 0);
+
   // update renderobject positions
   for (auto &obj : env->objs()) {
-    float drawPosX = obj.second.bbox()->pos().x() - (win->width() * 0.5f);
+    float drawPosX =
+        GraphicsTools::remap(obj.second.bbox()->pos().x(), 0, env->bbox()->w(),
+                             -0.5 * win->width(), 0.5 * win->width());
     float drawPosY =
-        (win->height() - obj.second.bbox()->pos().y()) - (win->height() * 0.5f);
+        GraphicsTools::remap(obj.second.bbox()->pos().y(), 0, env->bbox()->h(),
+                             0.5 * win->height(), -0.5 * win->height());
     ocm->at(obj.first).setPos(glm::vec3(drawPosX, drawPosY, 0.0f));
   }
 
   // generate on-screen status text
   std::ostringstream ctrlStatus;
-  ctrlStatus << "radius " << ctrls->at("radius").getValue() << "\nvelocity "
-             << ctrls->at("velx").getValue() << " "
-             << ctrls->at("vely").getValue() << "\nelasticity "
-             << ctrls->at("elast").getValue();
+  ctrlStatus << "radius " << (*ctrls)["radius"] << "\nvelocity "
+             << (*ctrls)["velx"] << " " << (*ctrls)["vely"] << "\nelasticity "
+             << (*ctrls)["elast"];
   // draw all objs
 
   // custom cursor - circle showing where new ball is placed
   // red if ball cannot be placed at cursor
   GraphicsTools::ColorRgba cursorColor =
       env->bbox()->containsBBox(
-          Circle(Vec(cursorPosX, cursorPosY), ctrls->at("radius").getValue()))
+          Circle(Vec(cursorPosX, cursorPosY), (*ctrls)["radius"]))
           ? GraphicsTools::ColorRgba({0, 0, 0, 0.3})
           : GraphicsTools::ColorRgba({0.6, 0, 0, 0.3});
 
@@ -65,12 +73,25 @@ void drawSim(GraphicsTools::Window *win) {
   // objects
   win->activeScene()->render();
   // status string
-  win->activeScene()->drawText2D(*font, ctrlStatus.str(),
-                                 GraphicsTools::Colors::Black, 50, 250, -1, 1);
+  win->drawText(ctrlStatus.str(), font, GraphicsTools::Colors::Black, 50, 250,
+                -1, GraphicsTools::Left);
   // cursor
-  win->activeScene()->drawCircle2D(cursorColor, cursorPosX,
-                                   win->height() - cursorPosY,
-                                   ctrls->at("radius").getValue());
+  win->drawCircle(cursorColor, cursorPosX, cursorPosY, (*ctrls)["radius"]);
+  // velocity arrow
+  Vec ctrlVel((*ctrls)["velx"], (*ctrls)["vely"]);
+  Vec cursorVel(fmax(ctrlVel.mag(), 5.0 * (*ctrls)["radius"]), ctrlVel.dir(),
+                MagDir);
+  if (ctrlVel.mag() > 0) {
+    double velAngle = cursorVel.dir();
+    win->drawArrow(cursorColor,
+                   cursorPosX + ((*ctrls)["radius"] * cos(velAngle)),
+                   cursorPosY - ((*ctrls)["radius"] * sin(velAngle)),
+                   cursorPosX + (2.5 * (*ctrls)["radius"] * cos(velAngle)) +
+                       (0.25 * cursorVel.x()),
+                   cursorPosY - (2.5 * (*ctrls)["radius"] * sin(velAngle)) -
+                       (0.25 * cursorVel.y()),
+                   (*ctrls)["radius"]);
+  }
   win->update();
 }
 
@@ -102,7 +123,7 @@ void mouseButtonCallback(GLFWwindow *win, int button, int action, int mods) {
   GraphicsTools::Window *mbWin =
       static_cast<GraphicsTools::Window *>(glfwGetWindowUserPointer(win));
   Environment *env = static_cast<Environment *>(mbWin->userPointer("env"));
-  CtrlSet *ctrls = static_cast<CtrlSet *>(mbWin->userPointer("ctrlset"));
+  ControlSet *ctrls = static_cast<ControlSet *>(mbWin->userPointer("ctrlset"));
   ObjMap *om = static_cast<ObjMap *>(mbWin->userPointer("objmap"));
   ShaderProgram *shader =
       static_cast<ShaderProgram *>(mbWin->userPointer("phongshader"));
@@ -131,21 +152,18 @@ void mouseButtonCallback(GLFWwindow *win, int button, int action, int mods) {
       }
     }
     if (!objAtCursor) {
-      if (env->bbox()->containsBBox(
-              Circle(cursorPos, ctrls->at("radius").getValue()))) {
-        env->addObj(Object(
-            new Circle(cursorPos, ctrls->at("radius").getValue()),
-            pow(ctrls->at("radius").getValue(), 3), cursorPos,
-            Vec(ctrls->at("velx").getValue(), ctrls->at("vely").getValue()),
-            ctrls->at("elast").getValue()));
+      if (env->bbox()->containsBBox(Circle(cursorPos, (*ctrls)["radius"]))) {
+        env->addObj(Object(new Circle(cursorPos, (*ctrls)["radius"]),
+                           pow((*ctrls)["radius"], 3), cursorPos,
+                           Vec((*ctrls)["velx"], (*ctrls)["vely"]),
+                           (*ctrls)["elast"]));
 
         GraphicsTools::Material mat = {GraphicsTools::randomColor(), NULL,
                                        0.5 * GraphicsTools::Colors::White, 4};
         om->emplace(env->lastObjId(), GraphicsTools::RenderObject());
         om->at(env->lastObjId()).setShader(shader);
         om->at(env->lastObjId()).setMaterial(mat);
-        om->at(env->lastObjId())
-            .genSphere(ctrls->at("radius").getValue(), 16, 16);
+        om->at(env->lastObjId()).genSphere((*ctrls)["radius"], 16, 16);
         om->at(env->lastObjId())
             .setPos(glm::vec3(cursorPos.x() - (mbWin->width() / 2.0f),
                               (mbWin->height() - cursorPos.y()) -
@@ -171,7 +189,7 @@ void cursorPosCallback(GLFWwindow *win, double x, double y) {
   GraphicsTools::Window *mbWin =
       static_cast<GraphicsTools::Window *>(glfwGetWindowUserPointer(win));
   Environment *env = static_cast<Environment *>(mbWin->userPointer("env"));
-  CtrlSet *ctrls = static_cast<CtrlSet *>(mbWin->userPointer("ctrlset"));
+  ControlSet *ctrls = static_cast<ControlSet *>(mbWin->userPointer("ctrlset"));
   ObjMap *om = static_cast<ObjMap *>(mbWin->userPointer("objmap"));
 
   double cursorPosX, cursorPosY;
@@ -198,48 +216,48 @@ void cursorPosCallback(GLFWwindow *win, double x, double y) {
 
 bool handleKeyStates(GraphicsTools::Window *win) {
   Environment *env = static_cast<Environment *>(win->userPointer("env"));
-  CtrlSet *ctrls = static_cast<CtrlSet *>(win->userPointer("ctrlset"));
+  ControlSet *ctrls = static_cast<ControlSet *>(win->userPointer("ctrlset"));
   GraphicsTools::Scene *sc = win->activeScene();
   // If the W key is pressed, increase radius of Objects created
   if (glfwGetKey(win->glfwWindow(), GLFW_KEY_W)) {
-    ctrls->at("radius").changeValue(simParams.ctrlRadius[2]);
-    std::cerr << "ctrl radius " << ctrls->at("radius").getValue() << "\n";
+    (*ctrls)("radius")++;
+    std::cerr << "ctrl radius " << (*ctrls)["radius"] << "\n";
   }
   // If the Q key is pressed, decrease radius of Objects created
   if (glfwGetKey(win->glfwWindow(), GLFW_KEY_Q)) {
-    ctrls->at("radius").changeValue(-simParams.ctrlRadius[2]);
-    std::cerr << "ctrl radius " << ctrls->at("radius").getValue() << "\n";
+    (*ctrls)("radius")--;
+    std::cerr << "ctrl radius " << (*ctrls)["radius"] << "\n";
   }
   // If the S key is pressed, increase elasticity of Objects created
   if (glfwGetKey(win->glfwWindow(), GLFW_KEY_S)) {
-    ctrls->at("elast").changeValue(0.01);
-    std::cerr << "ctrl elast " << ctrls->at("elast").getValue() << "\n";
+    (*ctrls)("elast")++;
+    std::cerr << "ctrl elast " << (*ctrls)["elast"] << "\n";
   }
   // If the A key is pressed, decrease elasticity of Objects created
   if (glfwGetKey(win->glfwWindow(), GLFW_KEY_A)) {
-    ctrls->at("elast").changeValue(-0.01);
-    std::cerr << "ctrl elast " << ctrls->at("elast").getValue() << "\n";
+    (*ctrls)("elast")--;
+    std::cerr << "ctrl elast " << (*ctrls)["elast"] << "\n";
   }
   //  velocity
   if (glfwGetKey(win->glfwWindow(), GLFW_KEY_LEFT)) {
-    ctrls->at("velx").changeValue(-simParams.ctrlVelX[2]);
-    std::cerr << "ctrl vel " << ctrls->at("velx").getValue() << " "
-              << ctrls->at("vely").getValue() << "\n";
+    (*ctrls)("velx")--;
+    std::cerr << "ctrl vel " << (*ctrls)["velx"] << " " << (*ctrls)["vely"]
+              << "\n";
   }
   if (glfwGetKey(win->glfwWindow(), GLFW_KEY_RIGHT)) {
-    ctrls->at("velx").changeValue(simParams.ctrlVelX[2]);
-    std::cerr << "ctrl vel " << ctrls->at("velx").getValue() << " "
-              << ctrls->at("vely").getValue() << "\n";
+    (*ctrls)("velx")++;
+    std::cerr << "ctrl vel " << (*ctrls)["velx"] << " " << (*ctrls)["vely"]
+              << "\n";
   }
   if (glfwGetKey(win->glfwWindow(), GLFW_KEY_UP)) {
-    ctrls->at("vely").changeValue(-simParams.ctrlVelY[2]);
-    std::cerr << "ctrl vel " << ctrls->at("velx").getValue() << " "
-              << ctrls->at("vely").getValue() << "\n";
+    (*ctrls)("vely")--;
+    std::cerr << "ctrl vel " << (*ctrls)["velx"] << " " << (*ctrls)["vely"]
+              << "\n";
   }
   if (glfwGetKey(win->glfwWindow(), GLFW_KEY_DOWN)) {
-    ctrls->at("vely").changeValue(simParams.ctrlVelY[2]);
-    std::cerr << "ctrl vel " << ctrls->at("velx").getValue() << " "
-              << ctrls->at("vely").getValue() << "\n";
+    (*ctrls)("vely")++;
+    std::cerr << "ctrl vel " << (*ctrls)["velx"] << " " << (*ctrls)["vely"]
+              << "\n";
   }
 
   return false;
@@ -261,15 +279,20 @@ int main(int argc, char *argv[]) {
     mainEnv.togglePause();
   }
 
-  CtrlSet mainCtrls;
-  mainCtrls["radius"] =
-      Control("Radius", simParams.ctrlRadius[0], simParams.ctrlRadius[1],
-              simParams.ctrlRadius[3]);
-  mainCtrls["velx"] = Control("X velocity", simParams.ctrlVelX[0],
-                              simParams.ctrlVelX[1], simParams.ctrlVelX[3]);
-  mainCtrls["vely"] = Control("Y velocity", simParams.ctrlVelY[0],
-                              simParams.ctrlVelY[1], simParams.ctrlVelY[3]);
-  mainCtrls["elast"] = Control("Elasticity", 0, 1, 1);
+  ControlSet mainCtrls;
+  mainCtrls._ctrls.emplace("radius", Control("Radius", simParams.ctrlRadius[0],
+                                             simParams.ctrlRadius[1],
+                                             simParams.ctrlRadius[2],
+                                             simParams.ctrlRadius[3]));
+  mainCtrls._ctrls.emplace("velx",
+                           Control("X velocity", simParams.ctrlVelX[0],
+                                   simParams.ctrlVelX[1], simParams.ctrlVelX[2],
+                                   simParams.ctrlVelX[3]));
+  mainCtrls._ctrls.emplace("vely",
+                           Control("Y velocity", simParams.ctrlVelY[0],
+                                   simParams.ctrlVelY[1], simParams.ctrlVelY[2],
+                                   simParams.ctrlVelY[3]));
+  mainCtrls._ctrls.emplace("elast", Control("Elasticity", 0, 1, 0.01, 1));
 
   GraphicsTools::InitGraphics();
   GraphicsTools::Window mainWindow("Gravity Sim", simParams.envDimensions.x(),
