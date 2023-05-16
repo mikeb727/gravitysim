@@ -10,7 +10,7 @@ public:
   Control();
   Control(std::string name, double min, double max, double inc,
           double defaultVal);
-  void setValue(double newValue) { _value = std::clamp(_value, _min, _max); };
+  void setValue(double newValue);
   void changeValue(double delta);
   double getValue() const { return _value; };
   void operator--(int);
