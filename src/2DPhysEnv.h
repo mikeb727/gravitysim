@@ -9,6 +9,9 @@
 #include "2DVec.h"
 #include "object.h"
 #include "rectangle.h"
+#include "simParams.h"
+
+extern SimParameters simParams;
 
 // each object has a unique ID (allows per-object colors
 // if visualization is used)
@@ -25,7 +28,7 @@ public:
   const Vec &gravity() const { return _g; };
   EnvObjSet &objs() { return _objs; };
   int time() const { return t; };
-  double dt() const {return _dt; };
+  double dt() const { return _dt; };
   const BBox *bbox() const { return _bbox; };
 
   // object operations
@@ -46,7 +49,7 @@ public:
 private:
   BBox *_bbox;     // environment boundary
   int t;           // simulation time
-  double _dt;       // time step
+  double _dt;      // time step
   Vec _g;          // environment gravity
   bool _paused;    // environment run state
   EnvObjSet _objs; // set of objects
