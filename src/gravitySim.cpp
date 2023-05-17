@@ -24,8 +24,14 @@ typedef std::map<int, GraphicsTools::RenderObject> ObjMap;
 // global parameters; used by all objects after initialization
 SimParameters simParams;
 
-// previous cursor positions (for dragging velocity calculation)
-double cursorPosPrevX, cursorPosPrevY;
+// cursor manipulation
+// avoid remapping these to window coords until absolutely necessary!
+struct CursorData {
+  double cursorPosPrevX, cursorPosPrevY;
+  double cursorPosX, cursorPosY;
+} cursor;
+
+bool freezeCursor = false;
 
 void drawSim(GraphicsTools::Window *win) {
   Environment *env = static_cast<Environment *>(win->userPointer("env"));
@@ -34,24 +40,15 @@ void drawSim(GraphicsTools::Window *win) {
   GraphicsTools::Font *font =
       static_cast<GraphicsTools::Font *>(win->userPointer("font"));
 
-  // for drawing custom cursor
-  double cursorPosX, cursorPosY;
-  glfwGetCursorPos(win->glfwWindow(), &cursorPosX, &cursorPosY);
-
-  cursorPosX =
-      GraphicsTools::remap(cursorPosX, 0, env->bbox()->w(), 0, win->width());
-  cursorPosY =
-      GraphicsTools::remap(cursorPosY, 0, env->bbox()->h(), win->height(), 0);
-
   // update renderobject positions
   for (auto &obj : env->objs()) {
-    float drawPosX =
+    // environment to scene coords
+    Vec drawPos(
         GraphicsTools::remap(obj.second.bbox()->pos().x(), 0, env->bbox()->w(),
-                             -0.5 * win->width(), 0.5 * win->width());
-    float drawPosY =
+                             -0.5 * win->width(), 0.5 * win->width()),
         GraphicsTools::remap(obj.second.bbox()->pos().y(), 0, env->bbox()->h(),
-                             0.5 * win->height(), -0.5 * win->height());
-    ocm->at(obj.first).setPos(glm::vec3(drawPosX, drawPosY, 0.0f));
+                             -0.5 * win->height(), 0.5 * win->height()));
+    ocm->at(obj.first).setPos(glm::vec3(drawPos.x(), drawPos.y(), 0.0f));
   }
 
   // generate on-screen status text
@@ -65,7 +62,8 @@ void drawSim(GraphicsTools::Window *win) {
   // red if ball cannot be placed at cursor
   GraphicsTools::ColorRgba cursorColor =
       env->bbox()->containsBBox(
-          Circle(Vec(cursorPosX, cursorPosY), (*ctrls)["radius"]))
+          Circle(Vec(cursor.cursorPosPrevX, cursor.cursorPosPrevY),
+                 (*ctrls)["radius"]))
           ? GraphicsTools::ColorRgba({0, 0, 0, 0.3})
           : GraphicsTools::ColorRgba({0.6, 0, 0, 0.3});
 
@@ -75,22 +73,24 @@ void drawSim(GraphicsTools::Window *win) {
   // status string
   win->drawText(ctrlStatus.str(), font, GraphicsTools::Colors::Black, 50, 250,
                 -1, GraphicsTools::Left);
-  // cursor
-  win->drawCircle(cursorColor, cursorPosX, cursorPosY, (*ctrls)["radius"]);
+  // cursor to window coords
+  Vec cursorDrawPos(GraphicsTools::remap(cursor.cursorPosPrevX, 0, win->width(),
+                                         0, win->width()),
+                    GraphicsTools::remap(cursor.cursorPosPrevY, 0,
+                                         win->height(), win->height(), 0));
+  win->drawCircle(cursorColor, cursorDrawPos.x(), cursorDrawPos.y(),
+                  (*ctrls)["radius"]);
   // velocity arrow
-  Vec ctrlVel((*ctrls)["velx"], (*ctrls)["vely"]);
-  Vec cursorVel(fmax(ctrlVel.mag(), 5.0 * (*ctrls)["radius"]), ctrlVel.dir(),
-                MagDir);
-  if (ctrlVel.mag() > 0) {
-    double velAngle = cursorVel.dir();
-    win->drawArrow(cursorColor,
-                   cursorPosX + ((*ctrls)["radius"] * cos(velAngle)),
-                   cursorPosY - ((*ctrls)["radius"] * sin(velAngle)),
-                   cursorPosX + (2.5 * (*ctrls)["radius"] * cos(velAngle)) +
-                       (0.25 * cursorVel.x()),
-                   cursorPosY - (2.5 * (*ctrls)["radius"] * sin(velAngle)) -
-                       (0.25 * cursorVel.y()),
-                   (*ctrls)["radius"]);
+  Vec ctrlVel((*ctrls)["velx"], -(*ctrls)["vely"]);
+  Vec arrowBasePos(
+      cursorDrawPos.x() + ((*ctrls)["radius"] * cos(ctrlVel.dir())),
+      cursorDrawPos.y() + ((*ctrls)["radius"] * sin(ctrlVel.dir())));
+  Vec arrowTipPos(cursorDrawPos + ctrlVel);
+  if (ctrlVel.mag() > (*ctrls)["radius"]) {
+    Vec diff(arrowTipPos - arrowBasePos);
+    win->drawArrow(cursorColor, arrowBasePos.x(), arrowBasePos.y(),
+                   arrowTipPos.x(), arrowTipPos.y(),
+                   fmin((*ctrls)["radius"], 0.4 * diff.mag()));
   }
   win->update();
 }
@@ -101,8 +101,9 @@ void keyCallback(GLFWwindow *win, int key, int scancode, int action, int mods) {
   GraphicsTools::Window *mbWin =
       static_cast<GraphicsTools::Window *>(glfwGetWindowUserPointer(win));
   Environment *env = static_cast<Environment *>(mbWin->userPointer("env"));
+  ControlSet *ctrls = static_cast<ControlSet *>(mbWin->userPointer("ctrlset"));
   ObjMap *om = static_cast<ObjMap *>(mbWin->userPointer("objmap"));
-  // If the 'C' key is pressed, remove all objects
+  // If thed'C' key is pressed, remove all objects
   if (key == GLFW_KEY_C && action == GLFW_PRESS) {
     for (auto &obj : env->objs()) {
       mbWin->activeScene()->removeRenderObject(obj.first);
@@ -117,6 +118,17 @@ void keyCallback(GLFWwindow *win, int key, int scancode, int action, int mods) {
   if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
     mbWin->setShouldClose(1);
   }
+  // If the F1 key is released, return the cursor to its previous position
+  // (unfreeze)
+  if (key == GLFW_KEY_F1 && action == GLFW_RELEASE && freezeCursor) {
+    freezeCursor = false;
+    glfwSetCursorPos(mbWin->glfwWindow(), cursor.cursorPosPrevX,
+                     cursor.cursorPosPrevY);
+  }
+  if (key == GLFW_KEY_F1 && action == GLFW_PRESS) {
+    (*ctrls)("velx").setValue(0);
+    (*ctrls)("vely").setValue(0);
+  }
 }
 
 void mouseButtonCallback(GLFWwindow *win, int button, int action, int mods) {
@@ -128,14 +140,16 @@ void mouseButtonCallback(GLFWwindow *win, int button, int action, int mods) {
   ShaderProgram *shader =
       static_cast<ShaderProgram *>(mbWin->userPointer("phongshader"));
 
-  double cursorPosX, cursorPosY;
   bool objAtCursor;
-  glfwGetCursorPos(win, &cursorPosX, &cursorPosY);
-  Vec cursorPos(cursorPosX, cursorPosY);
+  // cursor to environment coords
+  Vec envObjPos(GraphicsTools::remap(cursor.cursorPosPrevX, 0, env->bbox()->w(),
+                                     0, mbWin->width()),
+                GraphicsTools::remap(cursor.cursorPosPrevY, 0, env->bbox()->h(),
+                                     mbWin->height(), 0));
 
   if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
     for (auto &obj : env->objs()) {
-      if (obj.second.bbox()->containsPoint(cursorPos)) {
+      if (obj.second.bbox()->containsPoint(envObjPos)) {
         objAtCursor = true;
         obj.second.setSelectState(true);
         break;
@@ -145,37 +159,38 @@ void mouseButtonCallback(GLFWwindow *win, int button, int action, int mods) {
   // left mouse release: create object if none present at cursor
   if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
     for (auto &obj : env->objs()) {
-      if (obj.second.bbox()->containsPoint(cursorPos)) {
+      if (obj.second.bbox()->containsPoint(envObjPos)) {
         objAtCursor = true;
         obj.second.setSelectState(false);
         break;
       }
     }
     if (!objAtCursor) {
-      if (env->bbox()->containsBBox(Circle(cursorPos, (*ctrls)["radius"]))) {
-        env->addObj(Object(new Circle(cursorPos, (*ctrls)["radius"]),
-                           pow((*ctrls)["radius"], 3), cursorPos,
-                           Vec((*ctrls)["velx"], (*ctrls)["vely"]),
+      if (env->bbox()->containsBBox(Circle(envObjPos, (*ctrls)["radius"]))) {
+        env->addObj(Object(new Circle(envObjPos, (*ctrls)["radius"]),
+                           pow((*ctrls)["radius"], 3), envObjPos,
+                           Vec((*ctrls)["velx"], -(*ctrls)["vely"]),
                            (*ctrls)["elast"]));
-
+        Vec drawPos(GraphicsTools::remap(envObjPos.x(), 0, env->bbox()->w(),
+                                         -0.5 * mbWin->width(),
+                                         0.5 * mbWin->width()),
+                    GraphicsTools::remap(envObjPos.y(), 0, env->bbox()->h(),
+                                         -0.5 * mbWin->height(),
+                                         0.5 * mbWin->height()));
         GraphicsTools::Material mat = {GraphicsTools::randomColor(), NULL,
                                        0.5 * GraphicsTools::Colors::White, 4};
         om->emplace(env->lastObjId(), GraphicsTools::RenderObject());
         om->at(env->lastObjId()).setShader(shader);
         om->at(env->lastObjId()).setMaterial(mat);
         om->at(env->lastObjId()).genSphere((*ctrls)["radius"], 16, 16);
-        om->at(env->lastObjId())
-            .setPos(glm::vec3(cursorPos.x() - (mbWin->width() / 2.0f),
-                              (mbWin->height() - cursorPos.y()) -
-                                  (mbWin->height() * 0.5f),
-                              0));
+        om->at(env->lastObjId()).setPos(glm::vec3(drawPos.x(), drawPos.y(), 0));
         mbWin->activeScene()->addRenderObject(&om->at(env->lastObjId()));
       }
     }
   }
   if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
     for (auto &obj : env->objs()) {
-      if (obj.second.bbox()->containsPoint(cursorPos)) {
+      if (obj.second.bbox()->containsPoint(envObjPos)) {
         objAtCursor = true;
         mbWin->activeScene()->removeRenderObject(obj.first);
         env->removeObj(obj.first);
@@ -192,26 +207,43 @@ void cursorPosCallback(GLFWwindow *win, double x, double y) {
   ControlSet *ctrls = static_cast<ControlSet *>(mbWin->userPointer("ctrlset"));
   ObjMap *om = static_cast<ObjMap *>(mbWin->userPointer("objmap"));
 
-  double cursorPosX, cursorPosY;
+  freezeCursor = glfwGetKey(win, GLFW_KEY_F1) == GLFW_PRESS;
+
   bool objAtCursor;
-  glfwGetCursorPos(win, &cursorPosX, &cursorPosY);
-  Vec cursorPos(cursorPosX, cursorPosY);
+
+  glfwGetCursorPos(mbWin->glfwWindow(), &cursor.cursorPosX, &cursor.cursorPosY);
+  Vec cursorPos(cursor.cursorPosX, cursor.cursorPosY);
 
   if (glfwGetMouseButton(win, GLFW_MOUSE_BUTTON_LEFT)) {
+    // cursor to environment coords
+    Vec envObjPos(GraphicsTools::remap(cursorPos.x(), 0, env->bbox()->w(), 0,
+                                       mbWin->width()),
+                  GraphicsTools::remap(cursorPos.y(), 0, env->bbox()->h(),
+                                       mbWin->height(), 0));
     for (auto &obj : env->objs()) {
-      if (obj.second.bbox()->containsPoint(cursorPos) &&
+      if (obj.second.bbox()->containsPoint(envObjPos) &&
           obj.second.selected()) {
         objAtCursor = true;
-        obj.second.setPos(cursorPos);
-        obj.second.setVel(
-            75 * Vec(cursorPosX - cursorPosPrevX, cursorPosY - cursorPosPrevY));
+        obj.second.setPos(envObjPos);
+        obj.second.setVel(Vec(0, 0));
         break;
       }
     }
   }
 
-  cursorPosPrevX = cursorPosX;
-  cursorPosPrevY = cursorPosY;
+  if (!glfwGetMouseButton(win, GLFW_MOUSE_BUTTON_LEFT) &&
+      !glfwGetMouseButton(win, GLFW_MOUSE_BUTTON_RIGHT) && freezeCursor) {
+    (*ctrls)("velx").setValue(2.0 *
+                              (cursor.cursorPosX - cursor.cursorPosPrevX));
+    (*ctrls)("vely").setValue(2.0 *
+                              (cursor.cursorPosY - cursor.cursorPosPrevY));
+    std::cerr << cursor.cursorPosPrevY << "\n";
+  }
+
+  cursor.cursorPosPrevX =
+      freezeCursor ? cursor.cursorPosPrevX : cursor.cursorPosX;
+  cursor.cursorPosPrevY =
+      freezeCursor ? cursor.cursorPosPrevY : cursor.cursorPosY;
 }
 
 bool handleKeyStates(GraphicsTools::Window *win) {
@@ -312,7 +344,7 @@ int main(int argc, char *argv[]) {
   GraphicsTools::Scene sc;
   mainWindow.attachScene(&sc);
 
-  glfwSetInputMode(mainWindow.glfwWindow(), GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+  // glfwSetInputMode(mainWindow.glfwWindow(), GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 
   GraphicsTools::Camera cam1;
   cam1.setOrtho(mainWindow.width(), mainWindow.height());
