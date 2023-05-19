@@ -33,6 +33,38 @@ struct CursorData {
 
 bool freezeCursor = false;
 
+void drawCursor(GraphicsTools::Window *win) {
+  Environment *env = static_cast<Environment *>(win->userPointer("env"));
+  ControlSet *ctrls = static_cast<ControlSet *>(win->userPointer("ctrlset"));
+  // custom cursor - circle showing where new ball is placed
+  // red if ball cannot be placed at cursor
+  GraphicsTools::ColorRgba cursorColor =
+      env->bbox()->containsBBox(
+          Circle(Vec(cursor.cursorPosPrevX, cursor.cursorPosPrevY),
+                 (*ctrls)["radius"]))
+          ? GraphicsTools::ColorRgba({0, 0, 0, 0.3})
+          : GraphicsTools::ColorRgba({0.6, 0, 0, 0.3});
+  // cursor to window coords
+  Vec cursorDrawPos(GraphicsTools::remap(cursor.cursorPosPrevX, 0, win->width(),
+                                         0, win->width()),
+                    GraphicsTools::remap(cursor.cursorPosPrevY, 0,
+                                         win->height(), win->height(), 0));
+  // ball outline
+  win->drawCircle(cursorColor, cursorDrawPos.x(), cursorDrawPos.y(),
+                  (*ctrls)["radius"]);
+  // velocity arrow
+  double ctrlVelScaleFactor = 0.5;
+  Vec ctrlVel((*ctrls)["velx"], -(*ctrls)["vely"]);
+  Vec arrowBasePos = cursorDrawPos + ((*ctrls)["radius"] * ctrlVel.unit());
+  Vec arrowTipPos = cursorDrawPos + (ctrlVelScaleFactor * ctrlVel);
+  if (ctrlVel.mag() > (*ctrls)["radius"] / ctrlVelScaleFactor) {
+    Vec diff(arrowTipPos - arrowBasePos);
+    win->drawArrow(cursorColor, arrowBasePos.x(), arrowBasePos.y(),
+                   arrowTipPos.x(), arrowTipPos.y(),
+                   fmin((*ctrls)["radius"], 0.4 * diff.mag()));
+  }
+}
+
 void drawSim(GraphicsTools::Window *win) {
   Environment *env = static_cast<Environment *>(win->userPointer("env"));
   ObjMap *ocm = static_cast<ObjMap *>(win->userPointer("objmap"));
@@ -58,40 +90,13 @@ void drawSim(GraphicsTools::Window *win) {
              << (*ctrls)["elast"];
   // draw all objs
 
-  // custom cursor - circle showing where new ball is placed
-  // red if ball cannot be placed at cursor
-  GraphicsTools::ColorRgba cursorColor =
-      env->bbox()->containsBBox(
-          Circle(Vec(cursor.cursorPosPrevX, cursor.cursorPosPrevY),
-                 (*ctrls)["radius"]))
-          ? GraphicsTools::ColorRgba({0, 0, 0, 0.3})
-          : GraphicsTools::ColorRgba({0.6, 0, 0, 0.3});
-
   win->clear();
   // objects
   win->activeScene()->render();
+  drawCursor(win);
   // status string
   win->drawText(ctrlStatus.str(), font, GraphicsTools::Colors::Black, 50, 250,
                 -1, GraphicsTools::Left);
-  // cursor to window coords
-  Vec cursorDrawPos(GraphicsTools::remap(cursor.cursorPosPrevX, 0, win->width(),
-                                         0, win->width()),
-                    GraphicsTools::remap(cursor.cursorPosPrevY, 0,
-                                         win->height(), win->height(), 0));
-  win->drawCircle(cursorColor, cursorDrawPos.x(), cursorDrawPos.y(),
-                  (*ctrls)["radius"]);
-  // velocity arrow
-  Vec ctrlVel((*ctrls)["velx"], -(*ctrls)["vely"]);
-  Vec arrowBasePos(
-      cursorDrawPos.x() + ((*ctrls)["radius"] * cos(ctrlVel.dir())),
-      cursorDrawPos.y() + ((*ctrls)["radius"] * sin(ctrlVel.dir())));
-  Vec arrowTipPos(cursorDrawPos + ctrlVel);
-  if (ctrlVel.mag() > (*ctrls)["radius"]) {
-    Vec diff(arrowTipPos - arrowBasePos);
-    win->drawArrow(cursorColor, arrowBasePos.x(), arrowBasePos.y(),
-                   arrowTipPos.x(), arrowTipPos.y(),
-                   fmin((*ctrls)["radius"], 0.4 * diff.mag()));
-  }
   win->update();
 }
 
@@ -344,7 +349,7 @@ int main(int argc, char *argv[]) {
   GraphicsTools::Scene sc;
   mainWindow.attachScene(&sc);
 
-  // glfwSetInputMode(mainWindow.glfwWindow(), GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+  glfwSetInputMode(mainWindow.glfwWindow(), GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 
   GraphicsTools::Camera cam1;
   cam1.setOrtho(mainWindow.width(), mainWindow.height());
