@@ -58,7 +58,7 @@ private:
 };
 
 // print compatibility with cout/cerr
-inline std::ostream &operator<<(std::ostream &out, Environment &env) {
+inline std::ostream &operator<<(std::ostream &out, const Environment &env) {
   env.print(out);
   return out;
 }

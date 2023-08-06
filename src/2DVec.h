@@ -6,7 +6,7 @@
 #include <iostream>
 
 // Component: specify x and y components
-// MagDir: specify magnitude and direction (radians)
+// MagDir: specify magnitude and direction (in radians)
 enum VecMode { Component, MagDir };
 
 class Vec2 {
@@ -26,7 +26,7 @@ public:
   double x() const { return _x; };
   double y() const { return _y; };
   double mag() const;
-  double dir() const;
+  double dir() const; // in radians
   Vec2 unit() const; // unit vector in same direction
 
   // math operations
@@ -49,7 +49,6 @@ public:
 
   // debug
   void print(std::ostream &, bool) const;
-  void debugPrint(std::ostream &) const;
 };
 
 Vec2 operator*(double k, const Vec2 &v); // commutative scalar multiplication

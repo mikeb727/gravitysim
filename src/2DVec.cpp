@@ -4,6 +4,8 @@
 
 #include "2DVec.h"
 
+const double EQ_TOLERANCE = 1e-10;
+
 Vec2::Vec2() : _x(0), _y(0) {}
 
 Vec2::Vec2(double x, double y, VecMode mode) {
@@ -36,7 +38,7 @@ double Vec2::mag() const { return sqrt(pow(_x, 2) + pow(_y, 2)); }
 
 double Vec2::dir() const { return atan2(_y, _x); }
 
-Vec2 Vec2::unit() const { return Vec2(1, atan2(_y, _x), MagDir); }
+Vec2 Vec2::unit() const { return Vec2(1, dir(), MagDir); }
 
 Vec2 Vec2::plus(const Vec2 &v) const { return Vec2(x() + v.x(), y() + v.y()); }
 Vec2 Vec2::operator+(const Vec2 &v) const { return plus(v); }
@@ -56,7 +58,7 @@ double Vec2::dot(const Vec2 &v) const { return x() * v.x() + y() * v.y(); }
 double Vec2::cross(const Vec2 &v) const { return (x() * v.y() - y() * v.x()); }
 
 bool Vec2::equals(const Vec2 &v) const {
-  return fabs(_x - v._x) < 1e-10 && fabs(_y - v._y) < 1e-10;
+  return std::abs(_x - v._x) < EQ_TOLERANCE && std::abs(_y - v._y) < EQ_TOLERANCE;
 }
 bool Vec2::operator==(const Vec2 &v) const { return (equals(v)); }
 
@@ -66,10 +68,6 @@ void Vec2::print(std::ostream &out, bool componentForm = true) const {
   } else {
     out << "(mag " << _x << ", dir " << _y << ")";
   }
-}
-
-void Vec2::debugPrint(std::ostream &out) const {
-  out << _x << ' ' << _y << ' ' << x() << ' ' << y();
 }
 
 Vec2 euler(const Vec2 &v, const Vec2 &dv, double dt) { return v + (dv * dt); }
