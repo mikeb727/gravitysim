@@ -50,8 +50,8 @@ public:
 private:
   std::string objType;
   BBox *_bbox; // object bounding box
-  Vec2 _vel;    // object velocity
-  Vec2 _accel;  // object acceleration
+  Vec2 _vel;   // object velocity
+  Vec2 _accel; // object acceleration
 
   double _m;     // object mass
   double _elast; // ratio of pre- to post- collision velocity
@@ -60,5 +60,11 @@ private:
   Vec2 nextPos(
       double dt) const; // position of object at next time step; used internally
 };
+
+// print compatibility with cout/cerr
+inline std::ostream &operator<<(std::ostream &out, const Object &obj) {
+  obj.print(out);
+  return out;
+}
 
 #endif

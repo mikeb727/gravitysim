@@ -1,6 +1,6 @@
 TARGET=gravitysim
 
-OBJ=gravitySim.o 2DPhysEnv.o object.o 2DVec.o bbox.o circle.o rectangle.o control.o simParams.o
+OBJ=gravitySim.o 2DPhysEnv.o object.o 2DVec.o bbox.o circle.o rectangle.o control.o simParams.o cursor.o
 OBJS=$(addprefix $(BIN), $(OBJ))
 
 LINK=clang++
