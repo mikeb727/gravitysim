@@ -6,10 +6,10 @@
 extern SimParameters simParams;
 
 Object::Object()
-    : _bbox(new Circle(Vec(0, 0), 10)), _m(1), _elast(0), objType("Object") {}
+    : _bbox(new Circle(Vec2(0, 0), 10)), _m(1), _elast(0), objType("Object") {}
 
-Object::Object(BBox *bounds, double mass, const Vec &position,
-               const Vec &velocity, const double &elasticity)
+Object::Object(BBox *bounds, double mass, const Vec2 &position,
+               const Vec2 &velocity, const double &elasticity)
     : _bbox(bounds), _m(mass), _vel(velocity), _elast(elasticity),
       objType("Object"), _selected(false) {
   std::cerr << "obj create pos " << _bbox->pos() << " vel " << _vel << " elast "
@@ -27,8 +27,8 @@ bool Object::collidesWith(double dt, const Object &otherObj) const {
 void Object::resolveCollision(Object &otherObj) {
   // see
   // https://en.wikipedia.org/wiki/Elastic_collision#Two-dimensional_collision_with_two_moving_objects
-  Vec velocityDiff = _vel - otherObj._vel;
-  Vec positionDiff = _bbox->pos() - otherObj._bbox->pos();
+  Vec2 velocityDiff = _vel - otherObj._vel;
+  Vec2 positionDiff = _bbox->pos() - otherObj._bbox->pos();
   double sumMass = _m + otherObj._m;
   _vel =
       simParams.collisionCorrectionMultiplier *
@@ -42,7 +42,7 @@ void Object::resolveCollision(Object &otherObj) {
                                          -positionDiff));
 }
 
-Vec Object::nextPos(double dt) const {
+Vec2 Object::nextPos(double dt) const {
   return rk4(_bbox->pos(), _vel, _accel, dt);
 }
 
@@ -51,13 +51,13 @@ BBox *Object::nextBBox(double dt) const {
 }
 
 void Object::move(double dt, bool reverseH, bool reverseV) {
-  _vel = rk4(_vel, _accel, Vec(0, 0), dt);
+  _vel = rk4(_vel, _accel, Vec2(0, 0), dt);
   reverseDirection(reverseH, reverseV);
   _bbox->setPos(nextPos(dt));
 }
 
 void Object::reverseDirection(bool h, bool v) {
-  _vel = Vec((h ? -1 : 1) * _vel.x(), (v ? -1 : 1) * _vel.y()) * _elast;
+  _vel = Vec2((h ? -1 : 1) * _vel.x(), (v ? -1 : 1) * _vel.y()) * _elast;
 }
 
 void Object::print(std::ostream &out) const {

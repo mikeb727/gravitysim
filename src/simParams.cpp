@@ -45,11 +45,11 @@ SimParameters parseXmlConfig(std::string fileName) {
   };
   result.frameRate =
       getAttributeDouble(&paramsXml, {"environment", "frameRate"}, "value");
-  result.envDimensions = Vec(
+  result.envDimensions = Vec2(
       getAttributeDouble(&paramsXml, {"environment", "boundary"}, "width"),
       getAttributeDouble(&paramsXml, {"environment", "boundary"}, "height"));
   result.envGravity =
-      Vec(getAttributeDouble(&paramsXml, {"environment", "gravity"}, "x"),
+      Vec2(getAttributeDouble(&paramsXml, {"environment", "gravity"}, "x"),
           getAttributeDouble(&paramsXml, {"environment", "gravity"}, "y"));
   result.envPauseState =
       getAttributeBool(&paramsXml, {"environment", "paused"}, "value");

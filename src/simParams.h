@@ -9,8 +9,8 @@
 struct SimParameters {
   double frameRate;
   bool envPauseState;
-  Vec envDimensions;
-  Vec envGravity;
+  Vec2 envDimensions;
+  Vec2 envGravity;
   double envScale; // pixels per meter
   double collisionCorrectionMultiplier;
   std::vector<double> ctrlRadius;
@@ -21,8 +21,8 @@ struct SimParameters {
 
 const SimParameters defaultParams = {60,
                                      false,
-                                     Vec(800, 600),
-                                     Vec(0, 9.8),
+                                     Vec2(800, 600),
+                                     Vec2(0, 9.8),
                                      120,
                                      1.0,
                                      {10, 100, 1, 30},

@@ -12,33 +12,33 @@ public:
   virtual double w() const = 0;
 
   // key points
-  virtual const Vec &pos() const = 0;
-  virtual Vec center() const = 0;      // return position of center
-  virtual Vec top() const = 0;         // return position of top point
-  virtual Vec topLeft() const = 0;     // return position of top-left corner
-  virtual Vec left() const = 0;        // return position of left point
-  virtual Vec bottomLeft() const = 0;  // return position of bottom-left corner
-  virtual Vec bottom() const = 0;      // return position of bottom point
-  virtual Vec bottomRight() const = 0; // return position of bottom-right corner
-  virtual Vec right() const = 0;       // return position of right point
-  virtual Vec topRight() const = 0;    // return position of top-right corner
+  virtual const Vec2 &pos() const = 0;
+  virtual Vec2 center() const = 0;      // return position of center
+  virtual Vec2 top() const = 0;         // return position of top point
+  virtual Vec2 topLeft() const = 0;     // return position of top-left corner
+  virtual Vec2 left() const = 0;        // return position of left point
+  virtual Vec2 bottomLeft() const = 0;  // return position of bottom-left corner
+  virtual Vec2 bottom() const = 0;      // return position of bottom point
+  virtual Vec2 bottomRight() const = 0; // return position of bottom-right corner
+  virtual Vec2 right() const = 0;       // return position of right point
+  virtual Vec2 topRight() const = 0;    // return position of top-right corner
 
   // directly set position
-  virtual void setPos(const Vec &newPos) = 0;
+  virtual void setPos(const Vec2 &newPos) = 0;
 
   // intersection operations
-  virtual BBox *shift(const Vec &offset) const = 0;
+  virtual BBox *shift(const Vec2 &offset) const = 0;
   virtual double distanceFrom(const BBox &otherBBox) const = 0;
-  virtual bool containsPoint(const Vec &pos) const = 0;
+  virtual bool containsPoint(const Vec2 &pos) const = 0;
   virtual bool intersects(const BBox &otherBBox) const = 0;
   virtual bool containsBBox(const BBox &otherBBox) const = 0;
 
 protected:
   BBox();
-  BBox(const Vec &pos, double width, double height);
+  BBox(const Vec2 &pos, double width, double height);
   double _w; // bounding box width
   double _h; // bounding box height
-  Vec _pos;  // bounding box position
+  Vec2 _pos;  // bounding box position
 };
 
 #endif

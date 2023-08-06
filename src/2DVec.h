@@ -9,52 +9,52 @@
 // MagDir: specify magnitude and direction (radians)
 enum VecMode { Component, MagDir };
 
-class Vec {
+class Vec2 {
 private:
   double _x;
   double _y;
 
 public:
   // ctor, dtor
-  Vec(); // zero vector
-  Vec(double x, double y, VecMode mode = Component);
-  Vec(const Vec &v);
-  Vec &operator=(const Vec &v);
-  ~Vec();
+  Vec2(); // zero vector
+  Vec2(double x, double y, VecMode mode = Component);
+  Vec2(const Vec2 &v);
+  Vec2 &operator=(const Vec2 &v);
+  ~Vec2();
 
   // getters
   double x() const { return _x; };
   double y() const { return _y; };
   double mag() const;
   double dir() const;
-  Vec unit() const; // unit vector in same direction
+  Vec2 unit() const; // unit vector in same direction
 
   // math operations
-  Vec plus(const Vec &v) const;
-  Vec operator+(const Vec &v) const;
-  Vec minus(const Vec &v) const;
-  Vec operator-(const Vec &v) const;
-  Vec scalarMultiple(double k) const;
-  Vec operator*(double k) const;
-  Vec operator/(double k) const;
-  Vec operator-() const;
-  double dot(const Vec &v) const;
-  double cross(const Vec &v) const; // scalar in two-dimensional case
-  bool equals(const Vec &v) const;
-  bool operator==(const Vec &v) const;
+  Vec2 plus(const Vec2 &v) const;
+  Vec2 operator+(const Vec2 &v) const;
+  Vec2 minus(const Vec2 &v) const;
+  Vec2 operator-(const Vec2 &v) const;
+  Vec2 scalarMultiple(double k) const;
+  Vec2 operator*(double k) const;
+  Vec2 operator/(double k) const;
+  Vec2 operator-() const;
+  double dot(const Vec2 &v) const;
+  double cross(const Vec2 &v) const; // scalar in two-dimensional case
+  bool equals(const Vec2 &v) const;
+  bool operator==(const Vec2 &v) const;
 
   // numerical methods
-  friend Vec euler(const Vec &v, const Vec &dv, double dt);
-  friend Vec rk4(const Vec &v, const Vec &dv, const Vec &ddv, double dt);
+  friend Vec2 euler(const Vec2 &v, const Vec2 &dv, double dt);
+  friend Vec2 rk4(const Vec2 &v, const Vec2 &dv, const Vec2 &ddv, double dt);
 
   // debug
   void print(std::ostream &, bool) const;
   void debugPrint(std::ostream &) const;
 };
 
-Vec operator*(double k, const Vec &v); // commutative scalar multiplication
+Vec2 operator*(double k, const Vec2 &v); // commutative scalar multiplication
 
-inline std::ostream &operator<<(std::ostream &out, const Vec vec) {
+inline std::ostream &operator<<(std::ostream &out, const Vec2 vec) {
   vec.print(out, true);
   return out;
 }

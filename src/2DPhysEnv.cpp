@@ -5,9 +5,9 @@ extern SimParameters simParams;
 
 Environment::Environment() : t(0) {}
 
-Environment::Environment(double width, double height, const Vec &gravity,
+Environment::Environment(double width, double height, const Vec2 &gravity,
                          double timeStep)
-    : _bbox(new Rectangle(Vec(0, 0), width, height)), t(0), _g(gravity),
+    : _bbox(new Rectangle(Vec2(0, 0), width, height)), t(0), _g(gravity),
       _paused(false), nextObjId(0), _dt(timeStep) {
   std::cerr << "env create dim " << _bbox->w() << "x" << _bbox->h()
             << " gravity " << _g << " dt " << _dt << "\n";

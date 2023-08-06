@@ -21,11 +21,11 @@ class Environment {
 public:
   // ctor, dtor
   Environment(); // dimensions and gravity zero
-  Environment(double width, double height, const Vec &gravity, double timeStep);
+  Environment(double width, double height, const Vec2 &gravity, double timeStep);
   ~Environment();
 
   // getters
-  const Vec &gravity() const { return _g; };
+  const Vec2 &gravity() const { return _g; };
   EnvObjSet &objs() { return _objs; };
   int time() const { return t; };
   double dt() const { return _dt; };
@@ -50,7 +50,7 @@ private:
   BBox *_bbox;     // environment boundary
   int t;           // simulation time
   double _dt;      // time step
-  Vec _g;          // environment gravity
+  Vec2 _g;          // environment gravity
   bool _paused;    // environment run state
   EnvObjSet _objs; // set of objects
   int nextObjId;
