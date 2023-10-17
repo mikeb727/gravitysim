@@ -16,7 +16,7 @@ Vec2 Circle::bottomRight() const { return _pos + Vec2(_r, 7 * PI / 4, MagDir); }
 Vec2 Circle::right() const { return _pos + Vec2(_r, 0, MagDir); }
 Vec2 Circle::topRight() const { return _pos + Vec2(_r, PI / 4, MagDir); }
 
-BBox *Circle::shift(const Vec2 &d) const { return new Circle(_pos + d, _r); }
+BBox *Circle::shift(const Vec2 &offset) const { return new Circle(_pos + offset, _r); }
 
 double Circle::distanceFrom(const BBox &b) const {
   return (center() - b.center()).mag();
@@ -36,14 +36,4 @@ bool Circle::intersects(const BBox &b) const {
           containsPoint(b.left()) || containsPoint(b.bottomLeft()) ||
           containsPoint(b.bottom()) || containsPoint(b.bottomRight()) ||
           containsPoint(b.right()) || containsPoint(b.topRight()));
-}
-void Circle::printAllPoints(std::ostream &out) const {
-  out << top() << "\n"
-      << topLeft() << "\n"
-      << left() << "\n"
-      << bottomLeft() << "\n"
-      << bottom() << "\n"
-      << bottomRight() << "\n"
-      << right() << "\n"
-      << topRight() << "\n";
 }

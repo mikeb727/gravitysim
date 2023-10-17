@@ -29,17 +29,14 @@ public:
   Vec2 right() const;
   Vec2 topRight() const;
 
-  void setPos(const Vec2 &newPos) { _pos = newPos; };
+  void setPos(const Vec2 &pos) { _pos = pos; };
 
   // intersection operations
-  BBox *shift(const Vec2 &) const;
-  double distanceFrom(const BBox &) const;
-  bool containsPoint(const Vec2 &) const;
-  bool containsBBox(const BBox &) const;
-  bool intersects(const BBox &) const;
-
-  // debug
-  void printAllPoints(std::ostream &) const;
+  bool containsBBox(const BBox &b) const;
+  bool containsPoint(const Vec2 &p) const;
+  double distanceFrom(const BBox &b) const;
+  bool intersects(const BBox &b) const;
+  BBox *shift(const Vec2 &offset) const;
 
 protected:
   double _r; // circle radius

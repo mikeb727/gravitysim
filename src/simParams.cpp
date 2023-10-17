@@ -50,7 +50,7 @@ SimParameters parseXmlConfig(std::string fileName) {
       getAttributeDouble(&paramsXml, {"environment", "boundary"}, "height"));
   result.envGravity =
       Vec2(getAttributeDouble(&paramsXml, {"environment", "gravity"}, "x"),
-          getAttributeDouble(&paramsXml, {"environment", "gravity"}, "y"));
+           getAttributeDouble(&paramsXml, {"environment", "gravity"}, "y"));
   result.envPauseState =
       getAttributeBool(&paramsXml, {"environment", "paused"}, "value");
   result.collisionCorrectionMultiplier = getAttributeDouble(
@@ -70,5 +70,7 @@ SimParameters parseXmlConfig(std::string fileName) {
       getAttributeDouble(&paramsXml, {"controls", "velocityy"}, "max"),
       getAttributeDouble(&paramsXml, {"controls", "velocityy"}, "increment"),
       getAttributeDouble(&paramsXml, {"controls", "velocityy"}, "default")};
+  result.screensaverMode = getAttributeBool(
+      &paramsXml, {"controls", "screensaverMode"}, "value");
   return result;
 }

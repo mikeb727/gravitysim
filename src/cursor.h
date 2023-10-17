@@ -1,6 +1,7 @@
 #ifndef CURSOR_H
 #define CURSOR_H
 
+#include <map>
 #include <mb-libs/mbgfx.h>
 
 #include <chrono>
@@ -15,9 +16,9 @@ extern std::default_random_engine generator;
 
 enum Action {
   Null = 0,
-  GeneratePosition = 1,
-  GenerateVelocity = 2,
-  GenerateRadius = 3,
+  ChangePosition = 1,
+  ChangeVelocity = 2,
+  ChangeRadius = 3,
   CreateObject = 4,
 };
 

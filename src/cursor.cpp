@@ -7,11 +7,12 @@
 #include <random>
 
 typedef std::map<int, GraphicsTools::RenderObject> ObjMap;
-typedef std::map<Action, std::function<void>> actionFunctionMap;
 
-double actionStateMatrix[5][5] = {1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0,
-                                  0.0, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0,
-                                  1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0};
+double actionStateMatrix[5][5] = {0.0, 0.85, 0.90, 0.95, 1.0,
+                                  0.0, 0.05, 0.90, 0.95, 1.0,
+                                  0.0, 0.05, 0.10, 0.95, 1.0,
+                                  0.0, 0.05, 0.10, 0.15, 1.0,
+                                  0.0, 0.65, 0.70, 0.75, 1.0};
 
 Vec2 bezier2(Vec2 p0, Vec2 p1, Vec2 p2, double t) {
   return ((1 - t) * (1 - t) * p0) + (2 * (1 - t) * t * p1) + (t * t * p2);
@@ -48,6 +49,7 @@ CursorEmulator::CursorEmulator(GraphicsTools::Window *win)
 }
 
 void CursorEmulator::update() {
+  std::uniform_real_distribution<double> actionDist(0, 1);
   double tNow = computeTNow();
   // if finished with current action
   if (tNow > tNextActionEnd) {
@@ -60,22 +62,23 @@ void CursorEmulator::update() {
     (*ctrls)("velx").setValue(2.5 * current.deltaX);
     (*ctrls)("vely").setValue(-2.5 * current.deltaY);
     (*ctrls)("radius").setValue(current.radius);
-    if (env->objs().size() > 25) {
-      clearEnv();
+    if (env->objs().size() > 10) {
+      double deleteObjs = actionDist(generator);
+      if (deleteObjs < (1 - std::exp(-0.055 * env->objs().size())))
+        clearEnv();
     }
-    std::uniform_real_distribution<double> actionDist(0, 1);
     double nextAction = actionDist(generator);
     for (int i = 0; i < 5; ++i) {
-      std::cerr << current.action << " " << nextAction << "\n";
-      if (nextAction > actionStateMatrix[current.action][i]) {
+      if (nextAction < actionStateMatrix[current.action][i]) {
         target.action = (Action)i;
-        std::cerr << "doing " << target.action << "\n";
         doAction();
         break;
       }
     }
-    tNextActionStart = tNow + 1500;
-    tNextActionEnd = tNextActionStart + 1000;
+    std::exponential_distribution<double> startTimeDist(0.25);
+    std::uniform_real_distribution<double> durationDist(0.5, 1.5);
+    tNextActionStart = tNow + (10 * startTimeDist(generator));
+    tNextActionEnd = tNextActionStart + (1000 * durationDist(generator));
   }
   computeVel(tNow);
   computePos(tNow);
@@ -86,7 +89,7 @@ void CursorEmulator::computePos(double tNow) {
   double tBlend = smoothStep(tNextActionStart, tNextActionEnd, tNow);
   // set midpoint to existing point if not moving cursor
   // (prevents cursor from going in circle when performing other actions)
-  if (current.action == GeneratePosition) {
+  if (current.action == ChangePosition) {
     Vec2 cursorPosNew = bezier2(Vec2(prev.ballX, prev.ballY), bezierP1Ball,
                                 Vec2(target.ballX, target.ballY), tBlend);
     current.ballX = cursorPosNew.x();
@@ -98,7 +101,7 @@ void CursorEmulator::computePos(double tNow) {
 }
 
 void CursorEmulator::generatePos() {
-  current.action = GeneratePosition;
+  current.action = ChangePosition;
   Environment *env = static_cast<Environment *>(_win->userPointer("env"));
   std::uniform_real_distribution<float> xDist(200, env->bbox()->w() - 200);
   std::uniform_real_distribution<float> yDist(200, env->bbox()->h() - 200);
@@ -111,7 +114,7 @@ void CursorEmulator::generatePos() {
 
 void CursorEmulator::computeVel(double tNow) {
   double tBlend = smoothStep(tNextActionStart, tNextActionEnd, tNow);
-  if (current.action == GenerateVelocity) {
+  if (current.action == ChangeVelocity) {
     Vec2 arrowPosNew = bezier2(Vec2(prev.arrowX, prev.arrowY), bezierP1Arrow,
                                Vec2(target.arrowX, target.arrowY), tBlend);
     current.arrowX = arrowPosNew.x();
@@ -125,7 +128,7 @@ void CursorEmulator::computeVel(double tNow) {
 }
 
 void CursorEmulator::generateVel() {
-  current.action = GenerateVelocity;
+  current.action = ChangeVelocity;
   using namespace std::chrono;
   std::uniform_real_distribution<float> deltaDist(-360, 360);
   target.deltaX = deltaDist(generator);
@@ -140,15 +143,15 @@ void CursorEmulator::generateVel() {
 
 void CursorEmulator::computeRadius(double tNow) {
   double blend = smoothStep(tNextActionStart, tNextActionEnd, tNow);
-  double radiusNew = current.action == GenerateRadius
+  double radiusNew = current.action == ChangeRadius
                          ? (1 - blend) * prev.radius + blend * target.radius
                          : prev.radius;
   current.radius = radiusNew;
 }
 
 void CursorEmulator::generateRadius() {
-  current.action = GenerateRadius;
-  std::uniform_real_distribution<float> rDist(20, 60);
+  current.action = ChangeRadius;
+  std::uniform_real_distribution<float> rDist(30, 40);
   target.radius = rDist(generator);
 }
 
@@ -205,13 +208,13 @@ void CursorEmulator::clearEnv() {
 
 void CursorEmulator::doAction() {
   switch (target.action) {
-  case GeneratePosition:
+  case ChangePosition:
     generatePos();
     break;
-  case GenerateVelocity:
+  case ChangeVelocity:
     generateVel();
     break;
-  case GenerateRadius:
+  case ChangeRadius:
     generateRadius();
     break;
   case CreateObject:
