@@ -1,19 +1,19 @@
 /* This program allows a user to interact with
     objects within a two-dimensional physical
-    environment. Left clicking within the
+    environment. Left-clicking within the
     environment creates an object, while right-
     clicking on an object removes it. The user
     can grab and throw objects by holding down
     the left mouse button and moving the mouse. */
+
+#include <argparse/argparse.hpp>
+#include <mb-libs/mbgfx.h>
 
 #include "2DPhysEnv.h"
 #include "2DVec.h"
 #include "control.h"
 #include "cursor.h"
 #include "simParams.h"
-
-#include <argparse/argparse.hpp>
-#include <mb-libs/mbgfx.h>
 
 #include <algorithm>
 #include <chrono>
@@ -23,11 +23,26 @@
 #include <random>
 #include <sstream>
 
+// set of all balls to be rendered in environment
 typedef std::map<int, GraphicsTools::RenderObject> ObjMap;
+
+// switch for compile-time vs runtime shaders
+#define COMPILE_TIME_SHADERS
+#ifdef COMPILE_TIME_SHADERS
+const char *phongVs =
+
+#include "../assets/phong_shadows_vs_ct.glsl"
+
+    ;
+const char *phongFs =
+
+#include "../assets/phong_shadows_fs_ct.glsl"
+    ;
+#endif
 
 // global parameters; used by all objects after initialization
 SimParameters simParams;
-std::default_random_engine generator;
+std::default_random_engine generator; // for random ball colors
 
 Vec2 remapGlfwCursor(Vec2 v, GraphicsTools::Window *w) {
   Environment *e = static_cast<Environment *>(w->userPointer("env"));
@@ -35,9 +50,13 @@ Vec2 remapGlfwCursor(Vec2 v, GraphicsTools::Window *w) {
               GraphicsTools::remap(v.y(), 0, e->bbox()->h(), w->height(), 0));
 }
 
-void drawCursor(GraphicsTools::Window *mbWin, CursorData cur) {
-  Environment *env = static_cast<Environment *>(mbWin->userPointer("env"));
-  ControlSet *ctrls = static_cast<ControlSet *>(mbWin->userPointer("ctrlset"));
+void drawCursor(GraphicsTools::Window *win, CursorData cur) {
+  Environment *env = static_cast<Environment *>(win->userPointer("env"));
+  ControlSet *ctrls = static_cast<ControlSet *>(win->userPointer("ctrlset"));
+  if (!env || !ctrls){
+    std::cerr << "drawCursor error: null pointers!\n";
+    return;
+  }
   // custom cursor - circle showing where new ball is placed
   // red if ball cannot be placed at cursor
   GraphicsTools::ColorRgba cursorColor =
@@ -46,32 +65,32 @@ void drawCursor(GraphicsTools::Window *mbWin, CursorData cur) {
           : GraphicsTools::ColorRgba({0.8, 0.4, 0.4, 0.3});
   // cursor to environment/window/scene coords
   Vec2 cursorDrawPos = cur.isGlfw
-                           ? remapGlfwCursor(Vec2(cur.ballX, cur.ballY), mbWin)
+                           ? remapGlfwCursor(Vec2(cur.ballX, cur.ballY), win)
                            : Vec2(cur.ballX, cur.ballY);
   // delta remains constant when F1 is not pressed; use it instead of
   // subtracting
   Vec2 cursorArrowOffset(cur.deltaX, cur.deltaY);
   // draw ball outline
-  mbWin->drawCircle(cursorColor, cursorDrawPos.x(), cursorDrawPos.y(),
+  win->drawCircle(cursorColor, cursorDrawPos.x(), cursorDrawPos.y(),
                     cur.radius);
   // draw velocity arrow
   // find point on surface of ball in direction of arrowhead
   Vec2 arrowBasePos = cursorDrawPos + (cur.radius * cursorArrowOffset.unit());
   Vec2 arrowHeadPos = cursorDrawPos + cursorArrowOffset;
   if (cursorArrowOffset.mag() > cur.radius) {
-    mbWin->drawArrow(
+    win->drawArrow(
         cursorColor, arrowBasePos.x(), arrowBasePos.y(), arrowHeadPos.x(),
         arrowHeadPos.y(),
         fmin(cur.radius, 0.4 * (arrowHeadPos - arrowBasePos).mag()));
   }
 }
 
-void drawSim(GraphicsTools::Window *mbWin, CursorData cur) {
-  Environment *env = static_cast<Environment *>(mbWin->userPointer("env"));
-  ObjMap *ocm = static_cast<ObjMap *>(mbWin->userPointer("objmap"));
-  ControlSet *ctrls = static_cast<ControlSet *>(mbWin->userPointer("ctrlset"));
+void drawSim(GraphicsTools::Window *win, CursorData cur) {
+  Environment *env = static_cast<Environment *>(win->userPointer("env"));
+  ObjMap *ocm = static_cast<ObjMap *>(win->userPointer("objmap"));
+  ControlSet *ctrls = static_cast<ControlSet *>(win->userPointer("ctrlset"));
   GraphicsTools::Font *font =
-      static_cast<GraphicsTools::Font *>(mbWin->userPointer("font"));
+      static_cast<GraphicsTools::Font *>(win->userPointer("font"));
 
   // update renderobject positions
   for (auto &obj : env->objs()) {
@@ -79,19 +98,18 @@ void drawSim(GraphicsTools::Window *mbWin, CursorData cur) {
     ocm->at(obj.first).setPos(glm::vec3(drawPos.x(), drawPos.y(), 0.0f));
   }
 
-  mbWin->clear();
-  mbWin->activeScene()->render(); // all objs
-  drawCursor(mbWin, cur);         // cursor
+  win->clear();
+  win->activeScene()->render(); // all objs
+  drawCursor(win, cur);         // cursor
   // generate on-screen status text
   // std::ostringstream ctrlStatus;
   // ctrlStatus << "radius " << (*ctrls)["radius"] << "\nvelocity "
-  //            << (*ctrls)["velx"] << " " << (*ctrls)["vely"] << "\nelasticity
-  //            "
+  //            << (*ctrls)["velx"] << " " << (*ctrls)["vely"] << "\nelasticity "
   //            << (*ctrls)["elast"] << "\n" << *env;
-  // mbWin->drawText(ctrlStatus.str(), font, GraphicsTools::Colors::Black, 50,
+  // win->drawText(ctrlStatus.str(), font, GraphicsTools::Colors::Black, 50,
   // 250,
   //                 -1, GraphicsTools::Left); // status text
-  mbWin->update();
+  win->update();
 }
 
 void updateSim(Environment *env) { env->update(); }
@@ -316,9 +334,14 @@ int main(int argc, char *argv[]) {
   GraphicsTools::InitGraphics();
   GraphicsTools::Window window("Gravity Sim", simParams.envDimensions.x(),
                                simParams.envDimensions.y());
+#ifdef COMPILE_TIME_SHADERS
+  ShaderProgram phong(phongVs, phongFs, true);
+#else
   ShaderProgram phong("assets/phong_shadows_vs.glsl",
                       "assets/phong_shadows_fs.glsl");
+#endif
   GraphicsTools::Font windowFont("assets/font.ttf", 12);
+
   GraphicsTools::Scene sc;
   GraphicsTools::Camera cam1;
   GraphicsTools::DirectionalLight light2 = {

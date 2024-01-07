@@ -33,7 +33,7 @@ CursorData::CursorData()
     : arrowX(0), arrowY(0), ballX(0), ballY(0), deltaX(0), deltaY(0),
       isGlfw(false) {}
 
-CursorEmulator::CursorEmulator(GraphicsTools::Window *win)
+CursorEmulator::CursorEmulator(GraphicsTools::WindowBase *win)
     : _win(win), tNextActionEnd(0), tNextActionStart(0) {
   using namespace std::chrono;
   Environment *env = static_cast<Environment *>(_win->userPointer("env"));

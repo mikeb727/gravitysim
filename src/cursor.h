@@ -35,7 +35,7 @@ struct CursorData {
 };
 
 struct CursorEmulator {
-  CursorEmulator(GraphicsTools::Window *win);
+  CursorEmulator(GraphicsTools::WindowBase *win);
   CursorData prev;
   CursorData current;
   CursorData target;
@@ -53,7 +53,7 @@ struct CursorEmulator {
   void createObj();
   void clearEnv();
   void update();
-  GraphicsTools::Window *_win;
+  GraphicsTools::WindowBase *_win;
 };
 
 #endif
