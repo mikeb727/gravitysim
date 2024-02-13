@@ -27,11 +27,12 @@ public:
   double y() const { return _y; };
   double mag() const;
   double dir() const; // in radians
-  Vec2 unit() const; // unit vector in same direction
+  Vec2 unit() const;  // unit vector in same direction
 
   // math operations
   Vec2 plus(const Vec2 &v) const;
   Vec2 operator+(const Vec2 &v) const;
+  Vec2 &operator+=(const Vec2 &v);
   Vec2 minus(const Vec2 &v) const;
   Vec2 operator-(const Vec2 &v) const;
   Vec2 scalarMultiple(double k) const;
@@ -46,6 +47,7 @@ public:
   // numerical methods
   friend Vec2 euler(const Vec2 &v, const Vec2 &dv, double dt);
   friend Vec2 rk4(const Vec2 &v, const Vec2 &dv, const Vec2 &ddv, double dt);
+  friend Vec2 rk4_38(const Vec2 &v, const Vec2 &dv, const Vec2 &ddv, double dt); // lower-error 3/8 rule?
 
   // debug
   void print(std::ostream &, bool) const;

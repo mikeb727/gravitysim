@@ -46,6 +46,10 @@ public:
 
   // debug
   void print(std::ostream &out) const;
+  
+  // tuning
+  // kinetic and potential of all objects
+  double computeEnergy() const;
 
 private:
   BBox *_bbox;     // boundary (dimensions)

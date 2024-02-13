@@ -1,4 +1,5 @@
 #include "cursor.h"
+#include "utility.h"
 #include "2DPhysEnv.h"
 
 #include <cstdlib>
@@ -8,11 +9,13 @@
 
 typedef std::map<int, GraphicsTools::RenderObject> ObjMap;
 
+// clang-format off
 double actionStateMatrix[5][5] = {0.0, 0.85, 0.90, 0.95, 1.0,
                                   0.0, 0.05, 0.90, 0.95, 1.0,
                                   0.0, 0.05, 0.10, 0.95, 1.0,
                                   0.0, 0.05, 0.10, 0.15, 1.0,
                                   0.0, 0.65, 0.70, 0.75, 1.0};
+// clang-format on
 
 Vec2 bezier2(Vec2 p0, Vec2 p1, Vec2 p2, double t) {
   return ((1 - t) * (1 - t) * p0) + (2 * (1 - t) * t * p1) + (t * t * p2);
@@ -21,12 +24,6 @@ Vec2 bezier2(Vec2 p0, Vec2 p1, Vec2 p2, double t) {
 double smoothStep(double lo, double hi, double x) {
   double y = std::clamp((x - lo) / (hi - lo), 0.0, 1.0);
   return y * y * (3 - (2 * y));
-}
-
-double computeTNow() {
-  using namespace std::chrono;
-  return duration_cast<milliseconds>(system_clock::now().time_since_epoch())
-      .count();
 }
 
 CursorData::CursorData()
@@ -43,46 +40,49 @@ CursorEmulator::CursorEmulator(GraphicsTools::WindowBase *win)
   current.arrowY = env->bbox()->h() * 0.5;
   current.deltaX = 0;
   current.deltaY = 0;
-  current.radius = 30;
+  current.radius = 0.4;
   prev = current;
   current.action = Null;
 }
 
 void CursorEmulator::update() {
-  std::uniform_real_distribution<double> actionDist(0, 1);
-  double tNow = computeTNow();
-  // if finished with current action
-  if (tNow > tNextActionEnd) {
-    prev = current;
-    // override: rectify difference between arrow positions
-    prev.arrowX = current.ballX + current.deltaX;
-    prev.arrowY = current.ballY + current.deltaY;
-    ControlSet *ctrls = static_cast<ControlSet *>(_win->userPointer("ctrlset"));
-    Environment *env = static_cast<Environment *>(_win->userPointer("env"));
-    (*ctrls)("velx").setValue(2.5 * current.deltaX);
-    (*ctrls)("vely").setValue(-2.5 * current.deltaY);
-    (*ctrls)("radius").setValue(current.radius);
-    if (env->objs().size() > 10) {
-      double deleteObjs = actionDist(generator);
-      if (deleteObjs < (1 - std::exp(-0.055 * env->objs().size())))
-        clearEnv();
-    }
-    double nextAction = actionDist(generator);
-    for (int i = 0; i < 5; ++i) {
-      if (nextAction < actionStateMatrix[current.action][i]) {
-        target.action = (Action)i;
-        doAction();
-        break;
+  if (active) {
+    std::uniform_real_distribution<double> actionDist(0, 1);
+    double tNow = computeTNow();
+    // if finished with current action
+    if (tNow > tNextActionEnd) {
+      prev = current;
+      // override: rectify difference between arrow positions
+      prev.arrowX = current.ballX + current.deltaX;
+      prev.arrowY = current.ballY + current.deltaY;
+      ControlSet *ctrls =
+          static_cast<ControlSet *>(_win->userPointer("ctrlset"));
+      Environment *env = static_cast<Environment *>(_win->userPointer("env"));
+      (*ctrls)("velx").setValue(2.5 * current.deltaX);
+      (*ctrls)("vely").setValue(-2.5 * current.deltaY);
+      (*ctrls)("radius").setValue(current.radius);
+      if (env->objs().size() > 10) {
+        double deleteObjs = actionDist(generator);
+        if (deleteObjs < (1 - std::exp(-0.055 * env->objs().size())))
+          clearEnv();
       }
+      double nextAction = actionDist(generator);
+      for (int i = 0; i < 5; ++i) {
+        if (nextAction < actionStateMatrix[current.action][i]) {
+          target.action = (Action)i;
+          doAction();
+          break;
+        }
+      }
+      std::exponential_distribution<double> startTimeDist(0.25);
+      std::uniform_real_distribution<double> durationDist(0.5, 1.5);
+      tNextActionStart = tNow + (10 * startTimeDist(generator));
+      tNextActionEnd = tNextActionStart + (1000 * durationDist(generator));
     }
-    std::exponential_distribution<double> startTimeDist(0.25);
-    std::uniform_real_distribution<double> durationDist(0.5, 1.5);
-    tNextActionStart = tNow + (10 * startTimeDist(generator));
-    tNextActionEnd = tNextActionStart + (1000 * durationDist(generator));
+    computeVel(tNow);
+    computePos(tNow);
+    computeRadius(tNow);
   }
-  computeVel(tNow);
-  computePos(tNow);
-  computeRadius(tNow);
 }
 
 void CursorEmulator::computePos(double tNow) {
@@ -130,9 +130,9 @@ void CursorEmulator::computeVel(double tNow) {
 void CursorEmulator::generateVel() {
   current.action = ChangeVelocity;
   using namespace std::chrono;
-  std::uniform_real_distribution<float> deltaDist(-360, 360);
-  target.deltaX = deltaDist(generator);
-  target.deltaY = deltaDist(generator);
+  std::uniform_real_distribution<float> deltaDist(-10, 10);
+  target.deltaX = deltaDist(generator) * simParams.envScale;
+  target.deltaY = deltaDist(generator) * simParams.envScale;
   target.arrowX = target.ballX + target.deltaX;
   target.arrowY = target.ballY + target.deltaY;
   Vec2 midpoint = Vec2(0.5 * (target.arrowX + prev.arrowX),
@@ -151,7 +151,7 @@ void CursorEmulator::computeRadius(double tNow) {
 
 void CursorEmulator::generateRadius() {
   current.action = ChangeRadius;
-  std::uniform_real_distribution<float> rDist(30, 40);
+  std::uniform_real_distribution<float> rDist(0.15, 0.25);
   target.radius = rDist(generator);
 }
 
@@ -173,11 +173,11 @@ void CursorEmulator::createObj() {
   }
   if (!objAtCursor) {
     if (env->bbox()->containsBBox(
-            Circle(Vec2(current.ballX, current.ballY), (*ctrls)["radius"]))) {
+            Circle(Vec2(current.ballX, current.ballY), (*ctrls)["radius"] * simParams.envScale))) {
       env->addObj(Object(
-          new Circle(Vec2(current.ballX, current.ballY), (*ctrls)["radius"]),
-          pow((*ctrls)["radius"], 3), Vec2(current.ballX, current.ballY),
-          Vec2((*ctrls)["velx"], -(*ctrls)["vely"]), (*ctrls)["elast"]));
+          new Circle(Vec2(current.ballX, current.ballY), (*ctrls)["radius"] * simParams.envScale),
+          pow((*ctrls)["radius"] * simParams.envScale, 3) / 1000 , Vec2(current.ballX, current.ballY),
+          Vec2((*ctrls)["velx"], -(*ctrls)["vely"]) * simParams.envScale, (*ctrls)["elast"]));
       Vec2 drawPos(
           GraphicsTools::remap(Vec2(current.ballX, current.ballY).x(), 0,
                                env->bbox()->w(), -0.5 * _win->width(),
@@ -190,7 +190,7 @@ void CursorEmulator::createObj() {
       objMap->emplace(env->lastObjId(), GraphicsTools::RenderObject());
       objMap->at(env->lastObjId()).setShader(shader);
       objMap->at(env->lastObjId()).setMaterial(mat);
-      objMap->at(env->lastObjId()).genSphere((*ctrls)["radius"], 16, 16);
+      objMap->at(env->lastObjId()).genSphere((*ctrls)["radius"] * simParams.envScale, 16, 16);
       objMap->at(env->lastObjId())
           .setPos(glm::vec3(drawPos.x(), drawPos.y(), 0));
       _win->activeScene()->addRenderObject(&objMap->at(env->lastObjId()));

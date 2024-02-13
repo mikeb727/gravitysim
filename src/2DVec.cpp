@@ -42,6 +42,10 @@ Vec2 Vec2::unit() const { return Vec2(1, dir(), MagDir); }
 
 Vec2 Vec2::plus(const Vec2 &v) const { return Vec2(x() + v.x(), y() + v.y()); }
 Vec2 Vec2::operator+(const Vec2 &v) const { return plus(v); }
+Vec2 &Vec2::operator+=(const Vec2 &v) {
+  *this = this->plus(v);
+  return *this;
+}
 
 Vec2 Vec2::minus(const Vec2 &v) const { return Vec2(x() - v.x(), y() - v.y()); }
 Vec2 Vec2::operator-(const Vec2 &v) const { return minus(v); }
@@ -58,7 +62,8 @@ double Vec2::dot(const Vec2 &v) const { return x() * v.x() + y() * v.y(); }
 double Vec2::cross(const Vec2 &v) const { return (x() * v.y() - y() * v.x()); }
 
 bool Vec2::equals(const Vec2 &v) const {
-  return std::abs(_x - v._x) < EQ_TOLERANCE && std::abs(_y - v._y) < EQ_TOLERANCE;
+  return std::abs(_x - v._x) < EQ_TOLERANCE &&
+         std::abs(_y - v._y) < EQ_TOLERANCE;
 }
 bool Vec2::operator==(const Vec2 &v) const { return (equals(v)); }
 
@@ -79,4 +84,15 @@ Vec2 rk4(const Vec2 &v, const Vec2 &dv, const Vec2 &ddv, double dt) {
   Vec2 k4 = euler(k3, dv + (dt * ddv), dt);
 
   return v + (dt * ((k1 + 2 * k2 + 2 * k3 + k4) / 6));
+}
+
+Vec2 rk4_38(const Vec2 &v, const Vec2 &dv, const Vec2 &ddv, double dt) {
+  Vec2 k1 = dv;
+  Vec2 k2 = 0.333 * euler(k1, dv + (0.333 * dt * ddv), 0.333 * dt);
+  Vec2 k3 = -0.333 * euler(k1, dv + (0.667 * dt * ddv), 0.667 * dt) +
+            euler(k2, dv + (0.667 * dt * ddv), 0.667 * dt);
+  Vec2 k4 = euler(k1, dv + (dt * ddv), dt) - euler(k2, dv + (dt * ddv), dt) +
+            euler(k3, dv + (dt * ddv), dt);
+
+  return v + (dt * ((k1 + 3 * k2 + 3 * k3 + k4) / 8));
 }

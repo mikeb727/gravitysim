@@ -43,18 +43,27 @@ SimParameters parseXmlConfig(std::string fileName) {
               << "\"; using default parameters\n";
     return result;
   };
-  result.frameRate =
+  result.envFrameRate =
       getAttributeDouble(&paramsXml, {"environment", "frameRate"}, "value");
+  result.windowFrameRate =
+      getAttributeDouble(&paramsXml, {"visualization", "frameRate"}, "value");
   result.envDimensions = Vec2(
       getAttributeDouble(&paramsXml, {"environment", "boundary"}, "width"),
       getAttributeDouble(&paramsXml, {"environment", "boundary"}, "height"));
   result.envGravity =
       Vec2(getAttributeDouble(&paramsXml, {"environment", "gravity"}, "x"),
            getAttributeDouble(&paramsXml, {"environment", "gravity"}, "y"));
+  result.envScale = getAttributeDouble(
+      &paramsXml, {"environment", "pixelsPerMeter"}, "value");
   result.envPauseState =
       getAttributeBool(&paramsXml, {"environment", "paused"}, "value");
   result.collisionCorrectionMultiplier = getAttributeDouble(
       &paramsXml, {"tuning", "collisionCorrectionMultiplier"}, "value");
+  result.collisionMultiplierInterObj = getAttributeDouble(
+      &paramsXml, {"tuning", "collisionMultiplierInterObj"}, "value");
+  result.collisionMultiplierEnvBoundary = getAttributeDouble(
+      &paramsXml, {"tuning", "collisionMultiplierEnvBoundary"}, "value");
+  result.squishy = getAttributeBool(&paramsXml, {"tuning", "squishy"}, "value");
   result.ctrlRadius = {
       getAttributeDouble(&paramsXml, {"controls", "radius"}, "min"),
       getAttributeDouble(&paramsXml, {"controls", "radius"}, "max"),
@@ -70,7 +79,9 @@ SimParameters parseXmlConfig(std::string fileName) {
       getAttributeDouble(&paramsXml, {"controls", "velocityy"}, "max"),
       getAttributeDouble(&paramsXml, {"controls", "velocityy"}, "increment"),
       getAttributeDouble(&paramsXml, {"controls", "velocityy"}, "default")};
-  result.screensaverMode = getAttributeBool(
-      &paramsXml, {"controls", "screensaverMode"}, "value");
+  result.disableUserInput =
+      getAttributeBool(&paramsXml, {"controls", "disableUserInput"}, "value");
+  result.fullscreenMode =
+      getAttributeBool(&paramsXml, {"controls", "fullscreenMode"}, "value");
   return result;
 }

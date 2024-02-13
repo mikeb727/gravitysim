@@ -28,26 +28,42 @@ void Environment::moveObjs() {
       // colliding)
       if (obj1.first != obj2.first &&
           obj1.second.bbox()->distanceFrom(*obj2.second.bbox()) <
-              2.0 * simParams.ctrlRadius[1]) {
+              2.0 * simParams.ctrlRadius[1] * simParams.envScale) {
         if (obj1.second.collidesWith(_dt, obj2.second)) {
-          obj1.second.resolveCollision(obj2.second);
+          simParams.squishy ? obj1.second.resolveCollision2(obj2.second, _dt)
+                            : obj1.second.resolveCollision(obj2.second);
         }
       }
     }
   }
   // move unselected objects
   for (auto &obj : _objs) {
-    if (!obj.second.selected()) {
+    if (obj.second.selected()){
+      obj.second.setNetForce(Vec2());
+    }
+    else {
       obj.second.setAccel(_g);
-      // reverse object direction if the environment's bounding box at the next
-      // timestep does not contain both the object's bounding box edges on the
-      // axis (e.g. left and right for x-axis)
-      obj.second.move(
-          _dt,
-          !(_bbox->containsPoint(obj.second.nextBBox(_dt)->left()) &&
-            _bbox->containsPoint(obj.second.nextBBox(_dt)->right())),
-          !(_bbox->containsPoint(obj.second.nextBBox(_dt)->top()) &&
-            _bbox->containsPoint(obj.second.nextBBox(_dt)->bottom())));
+      // record x and y offsets of object outside the environment
+      simParams.squishy
+          ? obj.second.move2(
+                _dt, Vec2(fmin(obj.second.nextBBox(_dt)->left().x() -
+                                   _bbox->left().x(),
+                               0) +
+                              fmax(obj.second.nextBBox(_dt)->right().x() -
+                                       _bbox->right().x(),
+                                   0),
+                          fmin(obj.second.nextBBox(_dt)->bottom().y() -
+                                   _bbox->top().y(),
+                               0) +
+                              fmax(obj.second.nextBBox(_dt)->top().y() -
+                                       _bbox->bottom().y(),
+                                   0)))
+          : obj.second.move(
+                _dt,
+                !(_bbox->containsPoint(obj.second.nextBBox(_dt)->left()) &&
+                  _bbox->containsPoint(obj.second.nextBBox(_dt)->right())),
+                !(_bbox->containsPoint(obj.second.nextBBox(_dt)->top()) &&
+                  _bbox->containsPoint(obj.second.nextBBox(_dt)->bottom())));
     }
   }
 }
@@ -66,4 +82,12 @@ void Environment::print(std::ostream &out) const {
       out << " obj id " << obj.first << " " << obj.second << "\n";
     }
   }
+}
+
+double Environment::computeEnergy() const {
+  double result = 0;
+  for (auto &obj : _objs) {
+    result += obj.second.energy();
+  }
+  return result;
 }

@@ -32,6 +32,7 @@ struct CursorData {
   double radius;
   bool isGlfw; // remap y component if cursor position is obtained with GLFW
   Action action;
+  Vec2 vel;
 };
 
 struct CursorEmulator {
@@ -54,6 +55,7 @@ struct CursorEmulator {
   void clearEnv();
   void update();
   GraphicsTools::WindowBase *_win;
+  bool active;
 };
 
 #endif
