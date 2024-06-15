@@ -12,7 +12,7 @@
 #include "control.h"
 
 // rng is global
-extern std::default_random_engine generator;
+extern std::default_random_engine rng;
 
 enum Action {
   Null = 0,

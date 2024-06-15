@@ -26,6 +26,7 @@
 #include <sstream>
 
 // set of all balls to be rendered in environment
+// map ball in environment to ball in 3D scene via common ID
 typedef std::map<int, GraphicsTools::RenderObject> ObjMap;
 
 // switch for compile-time vs runtime shaders
@@ -44,21 +45,20 @@ const char *phongFs =
 
 // global parameters; used by all objects after initialization
 SimParameters simParams;
-std::default_random_engine generator; // for random ball colors
+std::default_random_engine rng; // for random ball colors
 
-Vec2 remapGlfwCursor(Vec2 v, GraphicsTools::Window *w) {
-  Environment *e = static_cast<Environment *>(w->userPointer("env"));
-  return Vec2(GraphicsTools::remap(v.x(), 0, e->bbox()->w(), 0, w->width()),
-              GraphicsTools::remap(v.y(), 0, e->bbox()->h(), w->height(), 0));
+Vec2 remapGlfwCursor(Vec2 vec, GraphicsTools::Window *win) {
+  Environment *env = static_cast<Environment *>(win->userPointer("env"));
+  assert(env);
+  return Vec2(
+      GraphicsTools::remap(vec.x(), 0, env->bbox()->w(), 0, win->width()),
+      GraphicsTools::remap(vec.y(), 0, env->bbox()->h(), win->height(), 0));
 }
 
 void drawCursor(GraphicsTools::Window *win, CursorData cur) {
   Environment *env = static_cast<Environment *>(win->userPointer("env"));
   ControlSet *ctrls = static_cast<ControlSet *>(win->userPointer("ctrlset"));
-  if (!env || !ctrls) {
-    std::cerr << "drawCursor error: null pointers!\n";
-    return;
-  }
+  assert(env && ctrls);
   // custom cursor - circle showing where new ball is placed
   // red if ball cannot be placed at cursor
   GraphicsTools::ColorRgba cursorColor =
@@ -95,7 +95,7 @@ void drawSim(GraphicsTools::Window *win, CursorData cur) {
   ControlSet *ctrls = static_cast<ControlSet *>(win->userPointer("ctrlset"));
   GraphicsTools::Font *font =
       static_cast<GraphicsTools::Font *>(win->userPointer("font"));
-
+  assert(env && ocm && ctrls && font);
   // update renderobject positions
   for (auto &obj : env->objs()) {
     Vec2 drawPos = obj.second.bbox()->pos();
@@ -118,11 +118,16 @@ void drawSim(GraphicsTools::Window *win, CursorData cur) {
   win->update();
 }
 
-void updateSim(Environment *env) { env->update(); }
+void updateSim(Environment *env) {
+  assert(env);
+  env->update();
+}
 
+// handles keypresses (NOT key states)
 void keyCallback(GLFWwindow *win, int key, int scancode, int action, int mods) {
   GraphicsTools::Window *mbWin =
       static_cast<GraphicsTools::Window *>(glfwGetWindowUserPointer(win));
+  assert(mbWin);
   Environment *env = static_cast<Environment *>(mbWin->userPointer("env"));
   ControlSet *ctrls = static_cast<ControlSet *>(mbWin->userPointer("ctrlset"));
   ObjMap *om = static_cast<ObjMap *>(mbWin->userPointer("objmap"));
@@ -130,7 +135,8 @@ void keyCallback(GLFWwindow *win, int key, int scancode, int action, int mods) {
       static_cast<CursorEmulator *>(mbWin->userPointer("cursor"));
   CursorEmulator *cursorEmu =
       static_cast<CursorEmulator *>(mbWin->userPointer("cursorEmu"));
-
+  // TODO what if no cursor emulator?
+  assert(env && ctrls && om && cursor && cursorEmu);
   if (!simParams.disableUserInput) {
 
     if (key == GLFW_KEY_S && action == GLFW_PRESS) {
@@ -172,6 +178,7 @@ void keyCallback(GLFWwindow *win, int key, int scancode, int action, int mods) {
 void mouseButtonCallback(GLFWwindow *win, int button, int action, int mods) {
   GraphicsTools::Window *mbWin =
       static_cast<GraphicsTools::Window *>(glfwGetWindowUserPointer(win));
+  assert(mbWin);
   Environment *env = static_cast<Environment *>(mbWin->userPointer("env"));
   ControlSet *ctrls = static_cast<ControlSet *>(mbWin->userPointer("ctrlset"));
   ObjMap *om = static_cast<ObjMap *>(mbWin->userPointer("objmap"));
@@ -181,7 +188,7 @@ void mouseButtonCallback(GLFWwindow *win, int button, int action, int mods) {
       static_cast<CursorEmulator *>(mbWin->userPointer("cursor"));
   CursorEmulator *cursorEmu =
       static_cast<CursorEmulator *>(mbWin->userPointer("cursorEmu"));
-
+  assert(env && ctrls && om && shader && cursor && cursorEmu);
   if (!simParams.disableUserInput || !cursorEmu->active) {
 
     bool objAtCursor = false;
@@ -261,25 +268,24 @@ void mouseButtonCallback(GLFWwindow *win, int button, int action, int mods) {
 void cursorPosCallback(GLFWwindow *win, double x, double y) {
   GraphicsTools::Window *mbWin =
       static_cast<GraphicsTools::Window *>(glfwGetWindowUserPointer(win));
+  assert(mbWin);
   Environment *env = static_cast<Environment *>(mbWin->userPointer("env"));
   ControlSet *ctrls = static_cast<ControlSet *>(mbWin->userPointer("ctrlset"));
   CursorEmulator *cursor =
       static_cast<CursorEmulator *>(mbWin->userPointer("cursor"));
   CursorEmulator *cursorEmu =
       static_cast<CursorEmulator *>(mbWin->userPointer("cursorEmu"));
+  assert(env && ctrls && cursor && cursorEmu);
 
   if (!simParams.disableUserInput || !cursorEmu->active) {
 
     Vec2 cursorPos(cursor->current.ballX, cursor->current.ballY);
-    std::cerr << x << " " << y << " \n";
     if (glfwGetKey(win, GLFW_KEY_F1) == GLFW_PRESS) {
-      cursor->current.arrowX = x;
-      cursor->current.arrowY = y;
-      cursor->current.deltaX = cursor->current.arrowX - cursor->current.ballX;
-      cursor->current.deltaY = cursor->current.arrowY - cursor->current.ballY;
-      (*ctrls)("velx").setValue(cursor->current.deltaX * 2.0 /
+      // pre-compulte delta
+      Vec2 cursorDelta(x - cursor->current.ballX, y - cursor->current.ballY);
+      (*ctrls)("velx").setValue(cursorDelta.x() * 2.0 /
                                 simParams.envScale);
-      (*ctrls)("vely").setValue(cursor->current.deltaY * 2.0 /
+      (*ctrls)("vely").setValue(cursorDelta.y() * 2.0 /
                                 simParams.envScale);
     } else {
       cursor->current.ballX = x;
@@ -377,7 +383,7 @@ int main(int argc, char *argv[]) {
   double tLastEnv = 0;
   double tLastEnergy = 0;
 
-  generator.seed(std::chrono::system_clock::now().time_since_epoch().count());
+  rng.seed(std::chrono::system_clock::now().time_since_epoch().count());
 
   argparse::ArgumentParser argParser("gravity_sim");
   argParser.add_argument("-c", "--config").default_value("").nargs(1);
@@ -387,8 +393,8 @@ int main(int argc, char *argv[]) {
   GraphicsTools::InitGraphics();
   GraphicsTools::Window window(
       "Gravity Sim", simParams.envDimensions.x(), simParams.envDimensions.y(),
-      simParams.fullscreenMode ? GraphicsTools::WindowMode::ScreensaverMode
-                               : GraphicsTools::WindowMode::Null);
+      simParams.fullscreenMode ? GraphicsTools::WindowType::ScreensaverMode
+                               : GraphicsTools::WindowType::Null);
 #ifdef COMPILE_TIME_SHADERS
   ShaderProgram phong(phongVs, phongFs, true);
 #else
