@@ -156,20 +156,25 @@ void keyCallback(GLFWwindow *win, int key, int scancode, int action, int mods) {
       if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
         env->togglePause();
       }
-      // f1 (release): return hidden cursor to ball position (from arrow tip
+      // left shift (release): return hidden cursor to ball position (from arrow tip
       // position)
-      if (key == GLFW_KEY_F1 && action == GLFW_RELEASE) {
-        glfwSetCursorPos(mbWin->glfwWindow(), cursor->current.ballX,
-                         cursor->current.ballY);
+      if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_RELEASE) {
+        glfwSetCursorPos(win, cursor->current.ballX, cursor->current.ballY);
       }
-      // f1 (press): freeze ball position, reset arrow tip position to ball
+      // left shift (press): freeze ball position, reset arrow tip position to ball
       // position, set velocity controls
-      if (key == GLFW_KEY_F1 && action == GLFW_PRESS) {
-        cursor->current.arrowX = cursor->current.ballX;
-        cursor->current.arrowY = cursor->current.ballY;
-        cursor->current.deltaX = cursor->current.deltaY = 0;
-        (*ctrls)("velx").setValue(cursor->current.deltaX);
-        (*ctrls)("vely").setValue(cursor->current.deltaY);
+      // left ctrl hold THEN left shift: modify existing velocity control setting with mouse
+      if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_PRESS) {
+        if (glfwGetKey(win, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
+          glfwSetCursorPos(win, cursor->current.ballX + cursor->current.deltaX,
+                           cursor->current.ballY + cursor->current.deltaY);
+        } else {
+          cursor->current.arrowX = cursor->current.ballX;
+          cursor->current.arrowY = cursor->current.ballY;
+          cursor->current.deltaX = cursor->current.deltaY = 0;
+          (*ctrls)("velx").setValue(cursor->current.deltaX);
+          (*ctrls)("vely").setValue(cursor->current.deltaY);
+        }
       }
     }
   }
@@ -280,13 +285,11 @@ void cursorPosCallback(GLFWwindow *win, double x, double y) {
   if (!simParams.disableUserInput || !cursorEmu->active) {
 
     Vec2 cursorPos(cursor->current.ballX, cursor->current.ballY);
-    if (glfwGetKey(win, GLFW_KEY_F1) == GLFW_PRESS) {
+    if (glfwGetKey(win, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
       // pre-compulte delta
       Vec2 cursorDelta(x - cursor->current.ballX, y - cursor->current.ballY);
-      (*ctrls)("velx").setValue(cursorDelta.x() * 2.0 /
-                                simParams.envScale);
-      (*ctrls)("vely").setValue(cursorDelta.y() * 2.0 /
-                                simParams.envScale);
+      (*ctrls)("velx").setValue(cursorDelta.x() * 2.0 / simParams.envScale);
+      (*ctrls)("vely").setValue(cursorDelta.y() * 2.0 / simParams.envScale);
     } else {
       cursor->current.ballX = x;
       cursor->current.ballY = y;
@@ -455,7 +458,7 @@ int main(int argc, char *argv[]) {
   userCursor.current.isGlfw = true;
   userCursor.active = false;
   glfwSetKeyCallback(window.glfwWindow(), keyCallback);
-  // glfwSetInputMode(window.glfwWindow(), GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+  glfwSetInputMode(window.glfwWindow(), GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
   glfwSetMouseButtonCallback(window.glfwWindow(), mouseButtonCallback);
   glfwSetCursorPosCallback(window.glfwWindow(), cursorPosCallback);
 
