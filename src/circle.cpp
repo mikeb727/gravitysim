@@ -3,7 +3,7 @@
 const double PI = 3.1415927;
 
 Circle::Circle() : _r(0) {}
-Circle::Circle(const Vec2 &p, double r) : BBox(p, 2 * r, 2 * r), _r(r) {}
+Circle::Circle(const Vec2 &p, double r) : BBox(p, 2 * r, 2 * r, 0), _r(r) {}
 Circle::~Circle() {}
 
 Vec2 Circle::center() const { return _pos; }

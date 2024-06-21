@@ -29,6 +29,7 @@ struct ControlSet {
   Control &operator()(std::string ctrlName);
   double operator[](std::string ctrlName);
   std::map<std::string, Control> _ctrls;
+  void addCtrl(std::string, Control);
 };
 
 #endif

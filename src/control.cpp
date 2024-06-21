@@ -28,3 +28,7 @@ Control &ControlSet::operator()(std::string ctrlName) {
 double ControlSet::operator[](std::string ctrlName) {
   return _ctrls.at(ctrlName).getValue();
 }
+
+void ControlSet::addCtrl(std::string ctrlName, Control ctrl){
+  _ctrls.emplace(ctrlName, ctrl);
+}

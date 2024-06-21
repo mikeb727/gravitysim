@@ -1,6 +1,6 @@
 #include "cursor.h"
-#include "utility.h"
 #include "2DPhysEnv.h"
+#include "utility.h"
 
 #include <cstdlib>
 #include <functional>
@@ -137,8 +137,7 @@ void CursorEmulator::generateVel() {
   target.arrowY = target.ballY + target.deltaY;
   Vec2 midpoint = Vec2(0.5 * (target.arrowX + prev.arrowX),
                        0.5 * (target.arrowY + prev.arrowY));
-  bezierP1Arrow =
-      midpoint + 0.2 * Vec2(deltaDist(rng), deltaDist(rng));
+  bezierP1Arrow = midpoint + 0.2 * Vec2(deltaDist(rng), deltaDist(rng));
 }
 
 void CursorEmulator::computeRadius(double tNow) {
@@ -173,11 +172,15 @@ void CursorEmulator::createObj() {
   }
   if (!objAtCursor) {
     if (env->bbox()->containsBBox(
-            Circle(Vec2(current.ballX, current.ballY), (*ctrls)["radius"] * simParams.envScale))) {
-      env->addObj(Object(
-          new Circle(Vec2(current.ballX, current.ballY), (*ctrls)["radius"] * simParams.envScale),
-          pow((*ctrls)["radius"] * simParams.envScale, 3) / 1000 , Vec2(current.ballX, current.ballY),
-          Vec2((*ctrls)["velx"], -(*ctrls)["vely"]) * simParams.envScale, (*ctrls)["elast"]));
+            Circle(Vec2(current.ballX, current.ballY),
+                   (*ctrls)["radius"] * simParams.envScale))) {
+      env->addObj(
+          Object(new Circle(Vec2(current.ballX, current.ballY),
+                            (*ctrls)["radius"] * simParams.envScale),
+                 pow((*ctrls)["radius"] * simParams.envScale, 3) / 1000,
+                 Vec2(current.ballX, current.ballY),
+                 Vec2((*ctrls)["velx"], -(*ctrls)["vely"]) * simParams.envScale,
+                 (*ctrls)["elast"], (*ctrls)["vela"]));
       Vec2 drawPos(
           GraphicsTools::remap(Vec2(current.ballX, current.ballY).x(), 0,
                                env->bbox()->w(), -0.5 * _win->width(),
@@ -190,7 +193,8 @@ void CursorEmulator::createObj() {
       objMap->emplace(env->lastObjId(), GraphicsTools::RenderObject());
       objMap->at(env->lastObjId()).setShader(shader);
       objMap->at(env->lastObjId()).setMaterial(mat);
-      objMap->at(env->lastObjId()).genSphere((*ctrls)["radius"] * simParams.envScale, 16, 16);
+      objMap->at(env->lastObjId())
+          .genSphere((*ctrls)["radius"] * simParams.envScale, 16, 16);
       objMap->at(env->lastObjId())
           .setPos(glm::vec3(drawPos.x(), drawPos.y(), 0));
       _win->activeScene()->addRenderObject(&objMap->at(env->lastObjId()));

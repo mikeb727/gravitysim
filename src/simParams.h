@@ -12,7 +12,6 @@ struct SimParameters {
   bool envPauseState;
   Vec2 envDimensions;
   Vec2 envGravity;
-  bool squishy;
   double envScale; // pixels per meter
   double collisionCorrectionMultiplier;
   double collisionMultiplierInterObj;
@@ -21,6 +20,7 @@ struct SimParameters {
   std::vector<double> ctrlElast;
   std::vector<double> ctrlVelX;
   std::vector<double> ctrlVelY;
+  std::vector<double> ctrlVelA;
   bool disableUserInput;
   bool fullscreenMode;
 };
@@ -30,7 +30,6 @@ const SimParameters defaultParams = {60,
                                      false,
                                      Vec2(800, 600),
                                      Vec2(0, 9.8),
-                                     false,
                                      200,
                                      1.0,
                                      1e6,
@@ -39,6 +38,7 @@ const SimParameters defaultParams = {60,
                                      {0, 1, 0.01, 1},
                                      {-100, 100, 5, 0},
                                      {-100, 100, 5, 0},
+                                     {-50, 50, 0.5, 0},
                                      false,
                                      false};
 SimParameters parseXmlConfig(std::string fileName);

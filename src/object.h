@@ -18,7 +18,7 @@ public:
   // ctor, dtor
   Object();
   Object(BBox *bounds, double mass, const Vec2 &position, const Vec2 &velocity,
-         const double &elasticity);
+         const double &elasticity, const double &aVel);
   ~Object();
 
   // getters
@@ -28,7 +28,8 @@ public:
   double mass() const { return _m; };
   bool selected() const { return _selected; };
   std::string type() const { return objType; };
-  double energy() const;
+  double kenergy() const;
+  double penergy() const;
 
   // setters
   void setPos(const Vec2 &v) { _bbox->setPos(v); };
@@ -42,23 +43,22 @@ public:
   bool collidesWith(
       double dt,
       const Object &obj) const; // whether bbox collides with other object's
-  void resolveCollision(Object &obj);
-  // experimental - momentum/impulse-based collision resolution
-  void resolveCollision2(Object &obj, double dt);
-  void move(double dt, bool reverseX = false, bool reverseY = false);
-  // forceX and forceY push object back in bounds if it would leave
-  void move2(double dt, Vec2 outsideEnv = Vec2());
-  void reverseDirection(bool x, bool y);
+  void resolveCollision(Object &obj, double dt);
+  // outsideEnv: push object back in bounds if it would leave
+  void move(double dt, Vec2 outsideEnv = Vec2());
 
   // debug
   void print(std::ostream &out) const;
 
 private:
   std::string objType;
-  BBox *_bbox; // object bounding box
-  Vec2 _vel;   // object velocity
-  Vec2 _accel; // object acceleration
-  Vec2 _fNet;  // net force on object
+  BBox *_bbox;    // object bounding box
+  Vec2 _vel;      // object velocity
+  Vec2 _accel;    // object acceleration
+  double _aVel;   // object angular velocity
+  double _aAccel; // object angular acceleration
+  Vec2 _fNet;     // net force on object
+  double _tNet;   // net torque on object
 
   double _m;     // object mass
   double _k;     // object stiffness (spring constant)
@@ -68,6 +68,7 @@ private:
   bool _selected; // selected objects will not move
   Vec2 nextPos(
       double dt) const; // position of object at next time step; used internally
+  double nextAngle(double dt) const;
 };
 
 // print compatibility with cout/cerr

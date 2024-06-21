@@ -15,6 +15,9 @@ public:
   double h() const { return _h; };
   const Vec2 &pos() const { return _pos; };
   void setPos(const Vec2 &newPos) { _pos = newPos; };
+  void setAngle(double newAngle) { _angle = newAngle; };
+
+  double angle() const { return _angle; };
 
   // key points
   Vec2 center() const;

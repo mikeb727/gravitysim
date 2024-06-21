@@ -1,7 +1,8 @@
 #include "rectangle.h"
 
 Rectangle::Rectangle(){};
-Rectangle::Rectangle(const Vec2 &pos, double width, double height) : BBox(pos, width, height) {}
+// todo add angle to created rectangles
+Rectangle::Rectangle(const Vec2 &pos, double width, double height) : BBox(pos, width, height, 0) {}
 Rectangle::~Rectangle() {}
 
 Vec2 Rectangle::center() const { return _pos + Vec2(_w / 2, _h / 2); }

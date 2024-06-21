@@ -19,6 +19,7 @@ public:
 
   // key points
   const Vec2 &pos() const { return _pos; };
+  double angle() const { return _angle; };
   Vec2 center() const;
   Vec2 top() const;
   Vec2 topLeft() const;
@@ -30,6 +31,7 @@ public:
   Vec2 topRight() const;
 
   void setPos(const Vec2 &pos) { _pos = pos; };
+  void setAngle(double newAngle) { _angle = newAngle; };
 
   // intersection operations
   bool containsBBox(const BBox &b) const;

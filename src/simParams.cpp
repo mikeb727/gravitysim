@@ -63,7 +63,6 @@ SimParameters parseXmlConfig(std::string fileName) {
       &paramsXml, {"tuning", "collisionMultiplierInterObj"}, "value");
   result.collisionMultiplierEnvBoundary = getAttributeDouble(
       &paramsXml, {"tuning", "collisionMultiplierEnvBoundary"}, "value");
-  result.squishy = getAttributeBool(&paramsXml, {"tuning", "squishy"}, "value");
   result.ctrlRadius = {
       getAttributeDouble(&paramsXml, {"controls", "radius"}, "min"),
       getAttributeDouble(&paramsXml, {"controls", "radius"}, "max"),
@@ -79,6 +78,11 @@ SimParameters parseXmlConfig(std::string fileName) {
       getAttributeDouble(&paramsXml, {"controls", "velocityy"}, "max"),
       getAttributeDouble(&paramsXml, {"controls", "velocityy"}, "increment"),
       getAttributeDouble(&paramsXml, {"controls", "velocityy"}, "default")};
+  result.ctrlVelA = {
+      getAttributeDouble(&paramsXml, {"controls", "velocitya"}, "min"),
+      getAttributeDouble(&paramsXml, {"controls", "velocitya"}, "max"),
+      getAttributeDouble(&paramsXml, {"controls", "velocitya"}, "increment"),
+      getAttributeDouble(&paramsXml, {"controls", "velocitya"}, "default")};
   result.disableUserInput =
       getAttributeBool(&paramsXml, {"controls", "disableUserInput"}, "value");
   result.fullscreenMode =

@@ -100,6 +100,8 @@ void drawSim(GraphicsTools::Window *win, CursorData cur) {
   for (auto &obj : env->objs()) {
     Vec2 drawPos = obj.second.bbox()->pos();
     ocm->at(obj.first).setPos(glm::vec3(drawPos.x(), drawPos.y(), 0.0f));
+    ocm->at(obj.first).setRotation(
+        glm::vec3(0.0, 0.0, obj.second.bbox()->angle()));
   }
 
   win->clear();
@@ -156,14 +158,14 @@ void keyCallback(GLFWwindow *win, int key, int scancode, int action, int mods) {
       if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
         env->togglePause();
       }
-      // left shift (release): return hidden cursor to ball position (from arrow tip
-      // position)
+      // left shift (release): return hidden cursor to ball position (from arrow
+      // tip position)
       if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_RELEASE) {
         glfwSetCursorPos(win, cursor->current.ballX, cursor->current.ballY);
       }
-      // left shift (press): freeze ball position, reset arrow tip position to ball
-      // position, set velocity controls
-      // left ctrl hold THEN left shift: modify existing velocity control setting with mouse
+      // left shift (press): freeze ball position, reset arrow tip position to
+      // ball position, set velocity controls left ctrl hold THEN left shift:
+      // modify existing velocity control setting with mouse
       if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_PRESS) {
         if (glfwGetKey(win, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
           glfwSetCursorPos(win, cursor->current.ballX + cursor->current.deltaX,
@@ -236,7 +238,7 @@ void mouseButtonCallback(GLFWwindow *win, int button, int action, int mods) {
               new Circle(envObjPos, (*ctrls)["radius"] * simParams.envScale),
               pow((*ctrls)["radius"] * simParams.envScale, 2) / 1000, envObjPos,
               Vec2((*ctrls)["velx"], -(*ctrls)["vely"]) * simParams.envScale,
-              (*ctrls)["elast"]));
+              (*ctrls)["elast"], (*ctrls)["vela"]));
           Vec2 drawPos(GraphicsTools::remap(envObjPos.x(), 0, env->bbox()->w(),
                                             -0.5 * mbWin->width(),
                                             0.5 * mbWin->width()),
@@ -370,6 +372,20 @@ bool handleKeyStates(GraphicsTools::Window *win) {
                 << "\n";
 #endif
     }
+    if (glfwGetKey(win->glfwWindow(), GLFW_KEY_E)) {
+      (*ctrls)("vela")--;
+#ifdef VERBOSE
+      std::cerr << "ctrl vel " << (*ctrls)["velx"] << " " << (*ctrls)["vely"]
+                << "\n";
+#endif
+    }
+    if (glfwGetKey(win->glfwWindow(), GLFW_KEY_R)) {
+      (*ctrls)("vela")++;
+#ifdef VERBOSE
+      std::cerr << "ctrl vel " << (*ctrls)["velx"] << " " << (*ctrls)["vely"]
+                << "\n";
+#endif
+    }
   }
 
   // If the escape key is pressed, signal to quit simulation
@@ -434,19 +450,20 @@ int main(int argc, char *argv[]) {
   window.setUserPointer("env", &environment);
 
   ControlSet ctrlSet;
-  ctrlSet._ctrls.emplace("radius", Control("Radius", simParams.ctrlRadius[0],
-                                           simParams.ctrlRadius[1],
-                                           simParams.ctrlRadius[2],
-                                           simParams.ctrlRadius[3]));
-  ctrlSet._ctrls.emplace("velx",
-                         Control("X velocity", simParams.ctrlVelX[0],
-                                 simParams.ctrlVelX[1], simParams.ctrlVelX[2],
-                                 simParams.ctrlVelX[3]));
-  ctrlSet._ctrls.emplace("vely",
-                         Control("Y velocity", simParams.ctrlVelY[0],
-                                 simParams.ctrlVelY[1], simParams.ctrlVelY[2],
-                                 simParams.ctrlVelY[3]));
-  ctrlSet._ctrls.emplace("elast", Control("Elasticity", 0, 1, 0.01, 1));
+  ctrlSet.addCtrl("radius",
+                  Control("Radius", simParams.ctrlRadius[0],
+                          simParams.ctrlRadius[1], simParams.ctrlRadius[2],
+                          simParams.ctrlRadius[3]));
+  ctrlSet.addCtrl("velx", Control("X velocity", simParams.ctrlVelX[0],
+                                  simParams.ctrlVelX[1], simParams.ctrlVelX[2],
+                                  simParams.ctrlVelX[3]));
+  ctrlSet.addCtrl("vely", Control("Y velocity", simParams.ctrlVelY[0],
+                                  simParams.ctrlVelY[1], simParams.ctrlVelY[2],
+                                  simParams.ctrlVelY[3]));
+  ctrlSet.addCtrl("elast", Control("Elasticity", 0, 1, 0.01, 1));
+  ctrlSet.addCtrl("vela", Control("Angular velocity", simParams.ctrlVelA[0],
+                                  simParams.ctrlVelA[1], simParams.ctrlVelA[2],
+                                  simParams.ctrlVelA[3]));
   window.setUserPointer("ctrlset", &ctrlSet);
 
   CursorEmulator userCursor(&window);
