@@ -5,16 +5,18 @@
 #include <cstdlib>
 #include <functional>
 #include <iostream>
+#include <mb-libs/window.h>
 #include <random>
 
 typedef std::map<int, GraphicsTools::RenderObject> ObjMap;
 
 // clang-format off
-double actionStateMatrix[5][5] = {0.0, 0.85, 0.90, 0.95, 1.0,
-                                  0.0, 0.05, 0.90, 0.95, 1.0,
-                                  0.0, 0.05, 0.10, 0.95, 1.0,
-                                  0.0, 0.05, 0.10, 0.15, 1.0,
-                                  0.0, 0.65, 0.70, 0.75, 1.0};
+double actionStateMatrix[6][6] = {0.0, 0.96, 0.97, 0.98, 0.99, 1.0,
+                                  0.0, 0.01, 0.97, 0.98, 0.99, 1.0,
+                                  0.0, 0.01, 0.02, 0.98, 0.99, 1.0,
+                                  0.0, 0.01, 0.02, 0.03, 0.99, 1.0,
+                                  0.0, 0.01, 0.02, 0.03, 0.04, 1.0,
+                                  0.0, 0.96, 0.97, 0.98, 0.99, 1.0};
 // clang-format on
 
 Vec2 bezier2(Vec2 p0, Vec2 p1, Vec2 p2, double t) {
@@ -48,7 +50,7 @@ CursorEmulator::CursorEmulator(GraphicsTools::WindowBase *win)
 void CursorEmulator::update() {
   if (active) {
     std::uniform_real_distribution<double> actionDist(0, 1);
-    double tNow = computeTNow();
+    double tNow = utils::computeTNow();
     // if finished with current action
     if (tNow > tNextActionEnd) {
       prev = current;
@@ -58,16 +60,17 @@ void CursorEmulator::update() {
       ControlSet *ctrls =
           static_cast<ControlSet *>(_win->userPointer("ctrlset"));
       Environment *env = static_cast<Environment *>(_win->userPointer("env"));
-      (*ctrls)("velx").setValue(2.5 * current.deltaX);
-      (*ctrls)("vely").setValue(-2.5 * current.deltaY);
+      (*ctrls)("velx").setValue(current.deltaX / simParams.envScale);
+      (*ctrls)("vely").setValue(-current.deltaY / simParams.envScale);
       (*ctrls)("radius").setValue(current.radius);
-      if (env->objs().size() > 10) {
+      (*ctrls)("vela").setValue(current.angularVel);
+      if (env->objs().size() > 20) {
         double deleteObjs = actionDist(rng);
-        if (deleteObjs < (1 - std::exp(-0.055 * env->objs().size())))
+        if (deleteObjs < (1 - std::exp(-0.015 * env->objs().size())))
           clearEnv();
       }
       double nextAction = actionDist(rng);
-      for (int i = 0; i < 5; ++i) {
+      for (int i = 0; i < 6; ++i) {
         if (nextAction < actionStateMatrix[current.action][i]) {
           target.action = (Action)i;
           doAction();
@@ -75,13 +78,14 @@ void CursorEmulator::update() {
         }
       }
       std::exponential_distribution<double> startTimeDist(0.25);
-      std::uniform_real_distribution<double> durationDist(0.5, 1.5);
+      std::uniform_real_distribution<double> durationDist(0.5, 2.0);
       tNextActionStart = tNow + (10 * startTimeDist(rng));
       tNextActionEnd = tNextActionStart + (1000 * durationDist(rng));
     }
     computeVel(tNow);
     computePos(tNow);
     computeRadius(tNow);
+    computeAngularVel(tNow);
   }
 }
 
@@ -103,8 +107,9 @@ void CursorEmulator::computePos(double tNow) {
 void CursorEmulator::generatePos() {
   current.action = ChangePosition;
   Environment *env = static_cast<Environment *>(_win->userPointer("env"));
-  std::uniform_real_distribution<float> xDist(200, env->bbox()->w() - 200);
-  std::uniform_real_distribution<float> yDist(200, env->bbox()->h() - 200);
+  std::uniform_real_distribution<float> xDist(150, env->bbox()->w() - 150);
+  std::uniform_real_distribution<float> yDist(env->bbox()->h() / 2.0,
+                                              env->bbox()->h() - 100);
   target.ballX = xDist(rng);
   target.ballY = yDist(rng);
   Vec2 midpoint(0.5 * (target.ballX + prev.ballX),
@@ -130,7 +135,7 @@ void CursorEmulator::computeVel(double tNow) {
 void CursorEmulator::generateVel() {
   current.action = ChangeVelocity;
   using namespace std::chrono;
-  std::uniform_real_distribution<float> deltaDist(-10, 10);
+  std::uniform_real_distribution<float> deltaDist(-6, 6);
   target.deltaX = deltaDist(rng) * simParams.envScale;
   target.deltaY = deltaDist(rng) * simParams.envScale;
   target.arrowX = target.ballX + target.deltaX;
@@ -150,56 +155,28 @@ void CursorEmulator::computeRadius(double tNow) {
 
 void CursorEmulator::generateRadius() {
   current.action = ChangeRadius;
-  std::uniform_real_distribution<float> rDist(0.15, 0.25);
+  std::uniform_real_distribution<float> rDist(0.2, 0.4);
   target.radius = rDist(rng);
+}
+
+void CursorEmulator::computeAngularVel(double tNow) {
+  double blend = smoothStep(tNextActionStart, tNextActionEnd, tNow);
+  double angularVelNew =
+      current.action == ChangeAngularVel
+          ? (1 - blend) * prev.angularVel + blend * target.angularVel
+          : prev.angularVel;
+  current.angularVel = angularVelNew;
+}
+
+void CursorEmulator::generateAngularVel() {
+  current.action = ChangeAngularVel;
+  std::uniform_real_distribution<float> rngDist(-50, 50);
+  target.angularVel = rngDist(rng);
 }
 
 void CursorEmulator::createObj() {
   current.action = CreateObject;
-  Environment *env = static_cast<Environment *>(_win->userPointer("env"));
-  ObjMap *objMap = static_cast<ObjMap *>(_win->userPointer("objmap"));
-  ControlSet *ctrls = static_cast<ControlSet *>(_win->userPointer("ctrlset"));
-  ShaderProgram *shader =
-      static_cast<ShaderProgram *>(_win->userPointer("phongshader"));
-
-  bool objAtCursor;
-  for (auto &obj : env->objs()) {
-    if (obj.second.bbox()->containsPoint(Vec2(current.ballX, current.ballY))) {
-      objAtCursor = true;
-      obj.second.setSelectState(false);
-      break;
-    }
-  }
-  if (!objAtCursor) {
-    if (env->bbox()->containsBBox(
-            Circle(Vec2(current.ballX, current.ballY),
-                   (*ctrls)["radius"] * simParams.envScale))) {
-      env->addObj(
-          Object(new Circle(Vec2(current.ballX, current.ballY),
-                            (*ctrls)["radius"] * simParams.envScale),
-                 pow((*ctrls)["radius"] * simParams.envScale, 3) / 1000,
-                 Vec2(current.ballX, current.ballY),
-                 Vec2((*ctrls)["velx"], -(*ctrls)["vely"]) * simParams.envScale,
-                 (*ctrls)["elast"], (*ctrls)["vela"]));
-      Vec2 drawPos(
-          GraphicsTools::remap(Vec2(current.ballX, current.ballY).x(), 0,
-                               env->bbox()->w(), -0.5 * _win->width(),
-                               0.5 * _win->width()),
-          GraphicsTools::remap(Vec2(current.ballX, current.ballY).y(), 0,
-                               env->bbox()->h(), -0.5 * _win->height(),
-                               0.5 * _win->height()));
-      GraphicsTools::Material mat = {GraphicsTools::randomColor(), NULL,
-                                     0.5 * GraphicsTools::Colors::White, 4};
-      objMap->emplace(env->lastObjId(), GraphicsTools::RenderObject());
-      objMap->at(env->lastObjId()).setShader(shader);
-      objMap->at(env->lastObjId()).setMaterial(mat);
-      objMap->at(env->lastObjId())
-          .genSphere((*ctrls)["radius"] * simParams.envScale, 16, 16);
-      objMap->at(env->lastObjId())
-          .setPos(glm::vec3(drawPos.x(), drawPos.y(), 0));
-      _win->activeScene()->addRenderObject(&objMap->at(env->lastObjId()));
-    }
-  }
+  utils::createObj((GraphicsTools::Window *)_win);
 }
 
 void CursorEmulator::clearEnv() {
@@ -220,6 +197,9 @@ void CursorEmulator::doAction() {
     break;
   case ChangeRadius:
     generateRadius();
+    break;
+  case ChangeAngularVel:
+    generateAngularVel();
     break;
   case CreateObject:
     createObj();

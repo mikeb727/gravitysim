@@ -22,14 +22,16 @@ private:
   double _min, _value, _inc, _max;
 };
 
-struct ControlSet {
+class ControlSet {
+public:
   ControlSet();
   // (): get control (for change operations)
   // []: get value
   Control &operator()(std::string ctrlName);
   double operator[](std::string ctrlName);
+  void addCtrl(std::string ctrlName, Control ctrl);
+private:
   std::map<std::string, Control> _ctrls;
-  void addCtrl(std::string, Control);
 };
 
 #endif

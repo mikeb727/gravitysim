@@ -19,7 +19,8 @@ enum Action {
   ChangePosition = 1,
   ChangeVelocity = 2,
   ChangeRadius = 3,
-  CreateObject = 4,
+  ChangeAngularVel = 4,
+  CreateObject = 5,
 };
 
 // cursor manipulation
@@ -30,9 +31,10 @@ struct CursorData {
   double ballX, ballY;
   double deltaX, deltaY;
   double radius;
+  Vec2 vel;
+  double angularVel;
   bool isGlfw; // remap y component if cursor position is obtained with GLFW
   Action action;
-  Vec2 vel;
 };
 
 struct CursorEmulator {
@@ -48,9 +50,11 @@ struct CursorEmulator {
   void generatePos();
   void generateVel();
   void generateRadius();
+  void generateAngularVel();
   void computePos(double tNow);
   void computeVel(double tNow);
   void computeRadius(double tNow);
+  void computeAngularVel(double tNow);
   void createObj();
   void clearEnv();
   void update();

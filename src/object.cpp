@@ -13,7 +13,8 @@ Object::Object()
     : _bbox(new Circle(Vec2(), 10)), _m(1), _elast(0), objType("Object") {}
 
 Object::Object(BBox *bounds, double mass, const Vec2 &position,
-               const Vec2 &velocity, const double &elasticity, const double &aVel)
+               const Vec2 &velocity, const double &elasticity,
+               const double &aVel)
     : _bbox(bounds), _m(mass), _vel(velocity), _aVel(aVel),
       _k(simParams.collisionMultiplierInterObj),
       _b(simParams.collisionMultiplierEnvBoundary), _elast(elasticity),
@@ -33,10 +34,14 @@ double Object::penergy() const {
           simParams.envScale);
 }
 
+// assume all objects circular
 bool Object::collidesWith(double dt, const Object &otherObj) const {
   if (this == &otherObj)
     return false;
-  return bbox()->intersects(*otherObj.bbox());
+  double sumRadii =
+      ((Circle *)_bbox)->radius() + ((Circle *)otherObj.bbox())->radius();
+  Vec2 positionDiff = otherObj._bbox->pos() - _bbox->pos();
+  return positionDiff.mag() < sumRadii;
 }
 
 void Object::resolveCollision(Object &otherObj, double dt) {
@@ -62,7 +67,7 @@ Vec2 Object::nextPos(double dt) const {
 }
 
 double Object::nextAngle(double dt) const {
-  return rk4(_bbox->angle(), _aVel, _aAccel, dt);
+  return utils::scalarRk4(_bbox->angle(), _aVel, _aAccel, dt);
 }
 
 BBox *Object::nextBBox(double dt) const {
@@ -82,7 +87,7 @@ void Object::move(double dt, Vec2 outsideEnv) {
   _accel = (simParams.envGravity * simParams.envScale) + (_fNet / _m);
   _vel = rk4(_vel, _accel, Vec2(), dt);
   _aAccel = _tNet / (0.4 * _m * pow(((Circle *)_bbox)->radius(), 2));
-  _aVel = rk4(_aVel, _aAccel, 0, dt);
+  _aVel = utils::scalarRk4(_aVel, _aAccel, 0, dt);
   _bbox->setPos(nextPos(dt));
   _bbox->setAngle(nextAngle(dt));
   // zero out net force

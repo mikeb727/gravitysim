@@ -25,12 +25,8 @@
 #include <random>
 #include <sstream>
 
-// set of all balls to be rendered in environment
-// map ball in environment to ball in 3D scene via common ID
-typedef std::map<int, GraphicsTools::RenderObject> ObjMap;
-
 // switch for compile-time vs runtime shaders
-#define COMPILE_TIME_SHADERS
+// #define COMPILE_TIME_SHADERS
 #ifdef COMPILE_TIME_SHADERS
 const char *phongVs =
 
@@ -47,18 +43,12 @@ const char *phongFs =
 SimParameters simParams;
 std::default_random_engine rng; // for random ball colors
 
-Vec2 remapGlfwCursor(Vec2 vec, GraphicsTools::Window *win) {
-  Environment *env = static_cast<Environment *>(win->userPointer("env"));
-  assert(env);
-  return Vec2(
-      GraphicsTools::remap(vec.x(), 0, env->bbox()->w(), 0, win->width()),
-      GraphicsTools::remap(vec.y(), 0, env->bbox()->h(), win->height(), 0));
-}
-
 void drawCursor(GraphicsTools::Window *win, CursorData cur) {
   Environment *env = static_cast<Environment *>(win->userPointer("env"));
   ControlSet *ctrls = static_cast<ControlSet *>(win->userPointer("ctrlset"));
-  assert(env && ctrls);
+  GraphicsTools::ShaderProgram *stripedCursor =
+      static_cast<GraphicsTools::ShaderProgram *>(win->userPointer("stripes2"));
+  assert(env && ctrls && stripedCursor);
   // custom cursor - circle showing where new ball is placed
   // red if ball cannot be placed at cursor
   GraphicsTools::ColorRgba cursorColor =
@@ -67,15 +57,15 @@ void drawCursor(GraphicsTools::Window *win, CursorData cur) {
           ? GraphicsTools::ColorRgba({0.4, 0.4, 0.4, 0.3})
           : GraphicsTools::ColorRgba({0.8, 0.4, 0.4, 0.3});
   // cursor to environment/window/scene coords
-  Vec2 cursorDrawPos = cur.isGlfw
-                           ? remapGlfwCursor(Vec2(cur.ballX, cur.ballY), win)
-                           : Vec2(cur.ballX, cur.ballY);
+  Vec2 cursorDrawPos =
+      cur.isGlfw ? utils::remapGlfwCursor(Vec2(cur.ballX, cur.ballY), win)
+                 : Vec2(cur.ballX, cur.ballY);
   // delta remains constant when F1 is not pressed; use it instead of
   // subtracting
-  Vec2 cursorArrowOffset(cur.deltaX, -cur.isGlfw * cur.deltaY);
+  Vec2 cursorArrowOffset(cur.deltaX, (cur.isGlfw ? -1 : 1) * cur.deltaY);
   // draw ball outline
   win->drawCircle(cursorColor, cursorDrawPos.x(), cursorDrawPos.y(),
-                  cur.radius * simParams.envScale);
+                  cur.radius * simParams.envScale, cur.angularVel * glfwGetTime() / 10.0, stripedCursor);
   // draw velocity arrow
   // find point on surface of ball in direction of arrowhead
   Vec2 arrowBasePos = cursorDrawPos + (cur.radius * simParams.envScale *
@@ -91,7 +81,7 @@ void drawCursor(GraphicsTools::Window *win, CursorData cur) {
 
 void drawSim(GraphicsTools::Window *win, CursorData cur) {
   Environment *env = static_cast<Environment *>(win->userPointer("env"));
-  ObjMap *ocm = static_cast<ObjMap *>(win->userPointer("objmap"));
+  utils::ObjMap *ocm = static_cast<utils::ObjMap *>(win->userPointer("objmap"));
   ControlSet *ctrls = static_cast<ControlSet *>(win->userPointer("ctrlset"));
   GraphicsTools::Font *font =
       static_cast<GraphicsTools::Font *>(win->userPointer("font"));
@@ -132,7 +122,8 @@ void keyCallback(GLFWwindow *win, int key, int scancode, int action, int mods) {
   assert(mbWin);
   Environment *env = static_cast<Environment *>(mbWin->userPointer("env"));
   ControlSet *ctrls = static_cast<ControlSet *>(mbWin->userPointer("ctrlset"));
-  ObjMap *om = static_cast<ObjMap *>(mbWin->userPointer("objmap"));
+  utils::ObjMap *om =
+      static_cast<utils::ObjMap *>(mbWin->userPointer("objmap"));
   CursorEmulator *cursor =
       static_cast<CursorEmulator *>(mbWin->userPointer("cursor"));
   CursorEmulator *cursorEmu =
@@ -188,9 +179,11 @@ void mouseButtonCallback(GLFWwindow *win, int button, int action, int mods) {
   assert(mbWin);
   Environment *env = static_cast<Environment *>(mbWin->userPointer("env"));
   ControlSet *ctrls = static_cast<ControlSet *>(mbWin->userPointer("ctrlset"));
-  ObjMap *om = static_cast<ObjMap *>(mbWin->userPointer("objmap"));
-  ShaderProgram *shader =
-      static_cast<ShaderProgram *>(mbWin->userPointer("phongshader"));
+  utils::ObjMap *om =
+      static_cast<utils::ObjMap *>(mbWin->userPointer("objmap"));
+  GraphicsTools::ShaderProgram *shader =
+      static_cast<GraphicsTools::ShaderProgram *>(
+          mbWin->userPointer("stripeshader"));
   CursorEmulator *cursor =
       static_cast<CursorEmulator *>(mbWin->userPointer("cursor"));
   CursorEmulator *cursorEmu =
@@ -200,7 +193,7 @@ void mouseButtonCallback(GLFWwindow *win, int button, int action, int mods) {
 
     bool objAtCursor = false;
     // cursor to environment coords
-    Vec2 envObjPos = remapGlfwCursor(
+    Vec2 envObjPos = utils::remapGlfwCursor(
         Vec2(cursor->current.ballX, cursor->current.ballY), mbWin);
 
     // left mouse press: select object under cursor
@@ -222,41 +215,7 @@ void mouseButtonCallback(GLFWwindow *win, int button, int action, int mods) {
         }
         obj.second.setSelectState(false);
       }
-      if (!objAtCursor) {
-        bool noOverlap = true;
-        for (auto &obj : env->objs()) {
-          if (obj.second.bbox()->intersects(
-                  Circle(envObjPos, (*ctrls)["radius"] * simParams.envScale))) {
-            noOverlap = false;
-            break;
-          }
-        }
-        if (noOverlap &&
-            env->bbox()->containsBBox(
-                Circle(envObjPos, (*ctrls)["radius"] * simParams.envScale))) {
-          env->addObj(Object(
-              new Circle(envObjPos, (*ctrls)["radius"] * simParams.envScale),
-              pow((*ctrls)["radius"] * simParams.envScale, 2) / 1000, envObjPos,
-              Vec2((*ctrls)["velx"], -(*ctrls)["vely"]) * simParams.envScale,
-              (*ctrls)["elast"], (*ctrls)["vela"]));
-          Vec2 drawPos(GraphicsTools::remap(envObjPos.x(), 0, env->bbox()->w(),
-                                            -0.5 * mbWin->width(),
-                                            0.5 * mbWin->width()),
-                       GraphicsTools::remap(envObjPos.y(), 0, env->bbox()->h(),
-                                            -0.5 * mbWin->height(),
-                                            0.5 * mbWin->height()));
-          GraphicsTools::Material mat = {GraphicsTools::randomColor(), NULL,
-                                         0.5 * GraphicsTools::Colors::White, 4};
-          om->emplace(env->lastObjId(), GraphicsTools::RenderObject());
-          om->at(env->lastObjId()).setShader(shader);
-          om->at(env->lastObjId()).setMaterial(mat);
-          om->at(env->lastObjId())
-              .genSphere((*ctrls)["radius"] * simParams.envScale, 16, 16);
-          om->at(env->lastObjId())
-              .setPos(glm::vec3(drawPos.x(), drawPos.y(), 0));
-          mbWin->activeScene()->addRenderObject(&om->at(env->lastObjId()));
-        }
-      }
+      utils::createObj(mbWin);
     }
     // right mouse press: remove object at cursor
     if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
@@ -372,15 +331,25 @@ bool handleKeyStates(GraphicsTools::Window *win) {
                 << "\n";
 #endif
     }
-    if (glfwGetKey(win->glfwWindow(), GLFW_KEY_E)) {
+    if (glfwGetKey(win->glfwWindow(), GLFW_KEY_T)) {
       (*ctrls)("vela")--;
+      cursor->current.angularVel = (*ctrls)["vela"];
+#ifdef VERBOSE
+      std::cerr << "ctrl vel " << (*ctrls)["velx"] << " " << (*ctrls)["vely"]
+                << "\n";
+#endif
+    }
+    if (glfwGetKey(win->glfwWindow(), GLFW_KEY_E)) {
+      (*ctrls)("vela")++;
+      cursor->current.angularVel = (*ctrls)["vela"];
 #ifdef VERBOSE
       std::cerr << "ctrl vel " << (*ctrls)["velx"] << " " << (*ctrls)["vely"]
                 << "\n";
 #endif
     }
     if (glfwGetKey(win->glfwWindow(), GLFW_KEY_R)) {
-      (*ctrls)("vela")++;
+      (*ctrls)("vela").setValue(0);
+      cursor->current.angularVel = (*ctrls)["vela"];
 #ifdef VERBOSE
       std::cerr << "ctrl vel " << (*ctrls)["velx"] << " " << (*ctrls)["vely"]
                 << "\n";
@@ -415,10 +384,14 @@ int main(int argc, char *argv[]) {
       simParams.fullscreenMode ? GraphicsTools::WindowType::ScreensaverMode
                                : GraphicsTools::WindowType::Null);
 #ifdef COMPILE_TIME_SHADERS
-  ShaderProgram phong(phongVs, phongFs, true);
+  GraphicsTools::ShaderProgram phong(phongVs, phongFs, true);
 #else
-  ShaderProgram phong("assets/phong_shadows_vs.glsl",
-                      "assets/phong_shadows_fs.glsl");
+  GraphicsTools::ShaderProgram phong("assets/phong_shadows_vs.glsl",
+                                     "assets/phong_shadows_fs.glsl");
+  GraphicsTools::ShaderProgram stripes("assets/stripes_vs.glsl",
+                                       "assets/stripes_fs.glsl");
+  GraphicsTools::ShaderProgram stripedCursor("assets/stripes2_vs.glsl",
+                                             "assets/stripes2_fs.glsl");
 #endif
   GraphicsTools::Font windowFont("assets/font.ttf", 12);
 
@@ -427,16 +400,18 @@ int main(int argc, char *argv[]) {
   GraphicsTools::DirectionalLight light2 = {
       glm::normalize(glm::vec3(0, -0.2, -1)),
       0.5 * GraphicsTools::Colors::White, GraphicsTools::Colors::White,
-      0.1 * GraphicsTools::Colors::White, &phong};
+      0.1 * GraphicsTools::Colors::White, &stripes};
   cam1.setOrtho(window.width(), window.height());
   cam1.setPos(glm::vec3(window.width() * 0.5f, window.height() * 0.5f, 400.0f));
   sc.addCamera(&cam1);
   sc.setActiveCamera(0);
   sc.setDirLight(&light2);
-  ObjMap mainOM;
+  utils::ObjMap mainOM;
   window.attachScene(&sc);
-  window.setClearColor({0.8, 0.7, 0.6, 1.0});
+  window.setClearColor({0.8, 0.7, 0.7, 1.0});
   window.setUserPointer("phongshader", &phong);
+  window.setUserPointer("stripeshader", &stripes);
+  window.setUserPointer("stripes2", &stripedCursor);
   window.setUserPointer("font", &windowFont);
   window.setUserPointer("objmap", &mainOM);
 
@@ -481,7 +456,7 @@ int main(int argc, char *argv[]) {
 
   // While the program is running
   while (!window.shouldClose()) {
-    double tNow = computeTNow();
+    double tNow = utils::computeTNow();
     // std::cerr << std::fixed << std::setprecision(5) << computeTNow() / 1000
     //           << "\n";
 
