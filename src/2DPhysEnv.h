@@ -8,7 +8,6 @@
 
 #include "2DVec.h"
 #include "object.h"
-#include "rectangle.h"
 #include "simParams.h"
 
 extern SimParameters simParams;

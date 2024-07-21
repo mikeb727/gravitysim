@@ -16,14 +16,10 @@
 #include "simParams.h"
 #include "utility.h"
 
-#include <algorithm>
 #include <chrono>
 #include <cmath>
-#include <iomanip>
-#include <iostream>
 #include <map>
 #include <random>
-#include <sstream>
 
 // switch for compile-time vs runtime shaders
 // #define COMPILE_TIME_SHADERS
@@ -36,6 +32,22 @@ const char *phongVs =
 const char *phongFs =
 
 #include "../assets/phong_shadows_fs_ct.glsl"
+    ;
+const char *stripesVs =
+
+#include "../assets/stripes_vs_ct.glsl"
+    ;
+const char *stripesFs =
+
+#include "../assets/stripes_fs_ct.glsl"
+    ;
+const char *cursorVs =
+
+#include "../assets/stripes2_vs_ct.glsl"
+    ;
+const char *cursorFs =
+
+#include "../assets/stripes2_fs_ct.glsl"
     ;
 #endif
 
@@ -385,6 +397,8 @@ int main(int argc, char *argv[]) {
                                : GraphicsTools::WindowType::Null);
 #ifdef COMPILE_TIME_SHADERS
   GraphicsTools::ShaderProgram phong(phongVs, phongFs, true);
+  GraphicsTools::ShaderProgram stripes(stripesVs, stripesFs, true);
+  GraphicsTools::ShaderProgram stripedCursor(cursorVs, cursorFs, true);
 #else
   GraphicsTools::ShaderProgram phong("assets/phong_shadows_vs.glsl",
                                      "assets/phong_shadows_fs.glsl");
@@ -393,12 +407,12 @@ int main(int argc, char *argv[]) {
   GraphicsTools::ShaderProgram stripedCursor("assets/stripes2_vs.glsl",
                                              "assets/stripes2_fs.glsl");
 #endif
-  GraphicsTools::Font windowFont("assets/font.ttf", 12);
+  GraphicsTools::Font windowFont("assets/font.ttf", 24);
 
   GraphicsTools::Scene sc;
   GraphicsTools::Camera cam1;
   GraphicsTools::DirectionalLight light2 = {
-      glm::normalize(glm::vec3(0, -0.2, -1)),
+      glm::normalize(glm::vec3(0, -0.2, -2)),
       0.5 * GraphicsTools::Colors::White, GraphicsTools::Colors::White,
       0.1 * GraphicsTools::Colors::White, &stripes};
   cam1.setOrtho(window.width(), window.height());
@@ -436,9 +450,9 @@ int main(int argc, char *argv[]) {
                                   simParams.ctrlVelY[1], simParams.ctrlVelY[2],
                                   simParams.ctrlVelY[3]));
   ctrlSet.addCtrl("elast", Control("Elasticity", 0, 1, 0.01, 1));
-  ctrlSet.addCtrl("vela", Control("Angular velocity", simParams.ctrlVelA[0],
-                                  simParams.ctrlVelA[1], simParams.ctrlVelA[2],
-                                  simParams.ctrlVelA[3]));
+  ctrlSet.addCtrl("vela", Control("Angular velocity", simParams.ctrlVelAngular[0],
+                                  simParams.ctrlVelAngular[1], simParams.ctrlVelAngular[2],
+                                  simParams.ctrlVelAngular[3]));
   window.setUserPointer("ctrlset", &ctrlSet);
 
   CursorEmulator userCursor(&window);

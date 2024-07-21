@@ -1,6 +1,8 @@
 #include "2DPhysEnv.h"
 #include <iostream>
 
+#include "rectangle.h"
+
 // global simulation parameters (from XML config file)
 extern SimParameters simParams;
 

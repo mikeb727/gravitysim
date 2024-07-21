@@ -57,32 +57,32 @@ SimParameters parseXmlConfig(std::string fileName) {
       &paramsXml, {"environment", "pixelsPerMeter"}, "value");
   result.envPauseState =
       getAttributeBool(&paramsXml, {"environment", "paused"}, "value");
-  result.collisionCorrectionMultiplier = getAttributeDouble(
-      &paramsXml, {"tuning", "collisionCorrectionMultiplier"}, "value");
-  result.collisionMultiplierInterObj = getAttributeDouble(
-      &paramsXml, {"tuning", "collisionMultiplierInterObj"}, "value");
-  result.collisionMultiplierEnvBoundary = getAttributeDouble(
-      &paramsXml, {"tuning", "collisionMultiplierEnvBoundary"}, "value");
+  result.objSpringCoeff =
+      getAttributeDouble(&paramsXml, {"tuning", "objSpringCoeff"}, "value");
+  result.objSpringDamping =
+      getAttributeDouble(&paramsXml, {"tuning", "objSpringDamping"}, "value");
+  result.objFrictionCoeff =
+      getAttributeDouble(&paramsXml, {"tuning", "objFrictionCoeff"}, "value");
   result.ctrlRadius = {
       getAttributeDouble(&paramsXml, {"controls", "radius"}, "min"),
       getAttributeDouble(&paramsXml, {"controls", "radius"}, "max"),
       getAttributeDouble(&paramsXml, {"controls", "radius"}, "increment"),
       getAttributeDouble(&paramsXml, {"controls", "radius"}, "default")};
   result.ctrlVelX = {
-      getAttributeDouble(&paramsXml, {"controls", "velocityx"}, "min"),
-      getAttributeDouble(&paramsXml, {"controls", "velocityx"}, "max"),
-      getAttributeDouble(&paramsXml, {"controls", "velocityx"}, "increment"),
-      getAttributeDouble(&paramsXml, {"controls", "velocityx"}, "default")};
+      getAttributeDouble(&paramsXml, {"controls", "velocityX"}, "min"),
+      getAttributeDouble(&paramsXml, {"controls", "velocityX"}, "max"),
+      getAttributeDouble(&paramsXml, {"controls", "velocityX"}, "increment"),
+      getAttributeDouble(&paramsXml, {"controls", "velocityX"}, "default")};
   result.ctrlVelY = {
-      getAttributeDouble(&paramsXml, {"controls", "velocityy"}, "min"),
-      getAttributeDouble(&paramsXml, {"controls", "velocityy"}, "max"),
-      getAttributeDouble(&paramsXml, {"controls", "velocityy"}, "increment"),
-      getAttributeDouble(&paramsXml, {"controls", "velocityy"}, "default")};
-  result.ctrlVelA = {
-      getAttributeDouble(&paramsXml, {"controls", "velocitya"}, "min"),
-      getAttributeDouble(&paramsXml, {"controls", "velocitya"}, "max"),
-      getAttributeDouble(&paramsXml, {"controls", "velocitya"}, "increment"),
-      getAttributeDouble(&paramsXml, {"controls", "velocitya"}, "default")};
+      getAttributeDouble(&paramsXml, {"controls", "velocityY"}, "min"),
+      getAttributeDouble(&paramsXml, {"controls", "velocityY"}, "max"),
+      getAttributeDouble(&paramsXml, {"controls", "velocityY"}, "increment"),
+      getAttributeDouble(&paramsXml, {"controls", "velocityY"}, "default")};
+  result.ctrlVelAngular = {
+      getAttributeDouble(&paramsXml, {"controls", "velocityAngular"}, "min"),
+      getAttributeDouble(&paramsXml, {"controls", "velocityAngular"}, "max"),
+      getAttributeDouble(&paramsXml, {"controls", "velocityAngular"}, "increment"),
+      getAttributeDouble(&paramsXml, {"controls", "velocityAngular"}, "default")};
   result.disableUserInput =
       getAttributeBool(&paramsXml, {"controls", "disableUserInput"}, "value");
   result.fullscreenMode =

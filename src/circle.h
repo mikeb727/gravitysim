@@ -3,8 +3,6 @@
 
 #include "bbox.h"
 
-#include <iostream>
-
 class Circle : public BBox {
 public:
   // ctor and dtor

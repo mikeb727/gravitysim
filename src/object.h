@@ -63,7 +63,6 @@ private:
   double _m;     // object mass
   double _k;     // object stiffness (spring constant)
   double _b;     // object damping ratio
-  double _elast; // ratio of pre- to post- collision velocity
 
   bool _selected; // selected objects will not move
   Vec2 nextPos(

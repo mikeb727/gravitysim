@@ -1,15 +1,11 @@
 #ifndef CURSOR_H
 #define CURSOR_H
 
-#include <map>
 #include <mb-libs/mbgfx.h>
 
-#include <chrono>
 #include <random>
 
-#include "2DPhysEnv.h"
 #include "2DVec.h"
-#include "control.h"
 
 // rng is global
 extern std::default_random_engine rng;

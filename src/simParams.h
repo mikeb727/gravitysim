@@ -13,14 +13,14 @@ struct SimParameters {
   Vec2 envDimensions;
   Vec2 envGravity;
   double envScale; // pixels per meter
-  double collisionCorrectionMultiplier;
-  double collisionMultiplierInterObj;
-  double collisionMultiplierEnvBoundary;
+  double objSpringCoeff;
+  double objSpringDamping;
+  double objFrictionCoeff;
   std::vector<double> ctrlRadius;
   std::vector<double> ctrlElast;
   std::vector<double> ctrlVelX;
   std::vector<double> ctrlVelY;
-  std::vector<double> ctrlVelA;
+  std::vector<double> ctrlVelAngular;
   bool disableUserInput;
   bool fullscreenMode;
 };
@@ -31,9 +31,9 @@ const SimParameters defaultParams = {60,
                                      Vec2(800, 600),
                                      Vec2(0, 9.8),
                                      200,
-                                     1.0,
                                      1e6,
                                      1e6,
+                                     1e-3,
                                      {10, 100, 1, 30},
                                      {0, 1, 0.01, 1},
                                      {-100, 100, 5, 0},

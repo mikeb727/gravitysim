@@ -2,11 +2,12 @@
 #include "2DPhysEnv.h"
 #include "utility.h"
 
+#include <algorithm>
 #include <cstdlib>
-#include <functional>
-#include <iostream>
 #include <mb-libs/window.h>
 #include <random>
+
+#include <chrono>
 
 typedef std::map<int, GraphicsTools::RenderObject> ObjMap;
 

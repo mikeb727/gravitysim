@@ -84,7 +84,7 @@ void createObj(GraphicsTools::Window *win) {
                                -0.5 * win->width(), 0.5 * win->width()),
           GraphicsTools::remap(envObjPos.y(), 0, env->bbox()->h(),
                                -0.5 * win->height(), 0.5 * win->height()));
-      GraphicsTools::Material mat = {GraphicsTools::ColorRgba({0.1, 0.7, 0.2, 1.0}), NULL,
+      GraphicsTools::Material mat = {GraphicsTools::randomColor(), NULL,
                                      0.5 * GraphicsTools::Colors::White, 4};
       om->emplace(env->lastObjId(), GraphicsTools::RenderObject());
       om->at(env->lastObjId()).setShader(shader);
