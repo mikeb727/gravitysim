@@ -3,37 +3,40 @@
 const double PI = 3.1415927;
 
 Circle::Circle() : _r(0) {}
-Circle::Circle(const Vec2 &p, double r) : BBox(p, 2 * r, 2 * r, 0), _r(r) {}
+Circle::Circle(const Vec3 &p, double r) : BBox(p, 2 * r, 2 * r, 2 * r), _r(r) {}
 Circle::~Circle() {}
 
-Vec2 Circle::center() const { return _pos; }
-Vec2 Circle::top() const { return _pos + Vec2(_r, PI / 2, MagDir); }
-Vec2 Circle::topLeft() const { return _pos + Vec2(_r, 3 * PI / 4, MagDir); }
-Vec2 Circle::left() const { return _pos + Vec2(_r, PI, MagDir); }
-Vec2 Circle::bottomLeft() const { return _pos + Vec2(_r, 5 * PI / 4, MagDir); }
-Vec2 Circle::bottom() const { return _pos + Vec2(_r, 3 * PI / 2, MagDir); }
-Vec2 Circle::bottomRight() const { return _pos + Vec2(_r, 7 * PI / 4, MagDir); }
-Vec2 Circle::right() const { return _pos + Vec2(_r, 0, MagDir); }
-Vec2 Circle::topRight() const { return _pos + Vec2(_r, PI / 4, MagDir); }
-
-BBox *Circle::shift(const Vec2 &offset) const { return new Circle(_pos + offset, _r); }
+BBox *Circle::shift(const Vec3 &offset) const {
+  return new Circle(_pos + offset, _r);
+}
 
 double Circle::distanceFrom(const BBox &b) const {
-  return (center() - b.center()).mag();
+  return (pos() - b.pos()).mag();
 }
-bool Circle::containsPoint(const Vec2 &p) const {
-  Vec2 distance = _pos - p;
+
+Vec3 Circle::point(BBoxLocation loc) const {
+  return Vec3((_pos.x() - (0.5 * _w)) + (0.5 * _w * (loc & 0x03)),
+              (_pos.y() - (0.5 * _h)) + (0.5 * _h * ((loc >> 2) & 0x03)),
+              (_pos.z() - (0.5 * _d)) + (0.5 * _d * ((loc >> 4) & 0x03)));
+}
+
+bool Circle::containsPoint(const Vec3 &p) const {
+  Vec3 distance = _pos - p;
   return distance.mag() < _r;
 }
+
 bool Circle::containsBBox(const BBox &b) const {
-  return (containsPoint(b.top()) && containsPoint(b.topLeft()) &&
-          containsPoint(b.left()) && containsPoint(b.bottomLeft()) &&
-          containsPoint(b.bottom()) && containsPoint(b.bottomRight()) &&
-          containsPoint(b.right()) && containsPoint(b.topRight()));
+  return (containsPoint(b.point(Left | Bottom | Far)) &&
+          containsPoint(b.point(Right | Top | Near)));
 }
+
 bool Circle::intersects(const BBox &b) const {
-  return (containsPoint(b.top()) || containsPoint(b.topLeft()) ||
-          containsPoint(b.left()) || containsPoint(b.bottomLeft()) ||
-          containsPoint(b.bottom()) || containsPoint(b.bottomRight()) ||
-          containsPoint(b.right()) || containsPoint(b.topRight()));
+  int testPoints[] = {0,  1,  2,  4,  5,  6,  8,  9,  10, 16, 17, 18, 20,
+                      22, 24, 25, 26, 32, 33, 34, 36, 37, 38, 40, 41, 42};
+  for (int i = 0; i < 26; ++i) {
+    if (containsPoint(b.point((BBoxLocation)i))) {
+      return true;
+    }
+  }
+  return false;
 }

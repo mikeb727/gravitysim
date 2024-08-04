@@ -19,7 +19,7 @@ Vec3::Vec3(double x, double y, double z) {
   _z = z;
 }
 
-Vec3::Vec3(Vec3 &dir, double mag) {
+Vec3::Vec3(const Vec3 &dir, double mag) {
   double lat, lon;
   lat = std::atan2(dir.unit()._y, std::hypot(dir.unit()._x, dir.unit()._z));
   lon = std::atan2(dir.unit()._z, dir.unit()._x);
@@ -78,7 +78,7 @@ double Vec3::dot(const Vec3 &v) const {
 
 Vec3 Vec3::cross(const Vec3 &v) const {
   return Vec3((y() * v.z() - z() * v.y()), (z() * v.x() - x() * v.z()),
-              (x() * v.y() - y() - v.x()));
+              (x() * v.y() - y() * v.x()));
 }
 
 bool Vec3::equals(const Vec3 &v) const {

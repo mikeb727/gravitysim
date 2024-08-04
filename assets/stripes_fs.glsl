@@ -62,14 +62,14 @@ float calcShadow(vec4 pos, DirectionalLight l){
 
 vec3 computeDirectionalLight(DirectionalLight l, Material m, vec3 normal, vec3 viewDir){
   vec3 lightDir = normalize(-l.dir);
-  float diffuseFactor = max(dot(normal, lightDir), 0.0);
+  float diffuseFactor = max(dot(normal, lightDir), 0.2);
   vec3 reflectDir = reflect(-lightDir, normal);
-  float specFactor = pow(max(dot(viewDir, reflectDir), 0.0), m.shininess);
+  float specFactor = pow(max(dot(viewDir, reflectDir), 0.2), m.shininess);
 
   vec3 ambient = l.ambient.rgb * m.diffuse.rgb;
   vec3 diffuse = l.diffuse.rgb * diffuseFactor * m.diffuse.rgb * fs_in.bw * (m.useDiffuseMap ? vec3(texture(m.diffuseMap, fs_in.texCoords)) : vec3(1.0));
   
-  vec3 specular = l.specular.rgb * specFactor * m.specular.rgb;
+  vec3 specular = l.specular.rgb * specFactor * m.specular.rgb * fs_in.bw;
   
   float shadow = calcShadow(fs_in.fragPos_l, l);
 

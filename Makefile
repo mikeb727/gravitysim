@@ -1,6 +1,6 @@
-TARGET=gravitysim
+TARGET=gravitysim-3d
 
-OBJ=gravitySim.o 2DPhysEnv.o object.o 2DVec.o bbox.o circle.o rectangle.o control.o simParams.o cursor.o utility.o
+OBJ=sim3d.o env3d.o ball.o vec3d.o quaternion.o bbox.o circle.o rectangle.o control.o simParams.o cursor.o utility.o
 OBJS=$(addprefix $(BIN), $(OBJ))
 
 LINK=clang++

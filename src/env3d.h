@@ -1,41 +1,42 @@
 /* A two-dimensional physics environment. */
 
-#ifndef ENV2D_H
-#define ENV2D_H
+#ifndef ENV3D_H
+#define ENV3D_H
 
 #include <cmath>
 #include <map>
 
-#include "2DVec.h"
-#include "object.h"
+#include "ball.h"
 #include "simParams.h"
+#include "vec3d.h"
 
 extern SimParameters simParams;
 
 // each object has a unique ID (allows per-object colors
 // if visualization is used)
-typedef std::map<int, Object> EnvObjSet;
+typedef std::map<int, Ball> EnvObjSet;
 
 class Environment {
 public:
   // ctor, dtor
   Environment(); // dimensions and gravity zero
-  Environment(double width, double height, const Vec2 &gravity,
+  Environment(double width, double height, double depth, const Vec3 &gravity,
               double timeStep);
   ~Environment();
 
   // getters
   const BBox *bbox() const { return _bbox; };
   double dt() const { return _dt; };
-  const Vec2 &gravity() const { return _g; };
+  const Vec3 &gravity() const { return _g; };
   EnvObjSet &objs() { return _objs; };
   int time() const { return _t; };
 
   // object operations
-  void addObj(const Object &obj) { _objs.emplace(_nextObjId++, obj); };
+  void addObj(const Ball &obj) { _objs.emplace(_nextObjId++, obj); };
   void clearObjs() { _objs.clear(); };
   int lastObjId() const { return _nextObjId - 1; };
   void removeObj(int id) { _objs.erase(id); };
+  void setNextId(int id) { _nextObjId = id; }; // to handle issues with non-ball renderobject deletion
 
   // simulation operations
   void moveObjs();
@@ -45,15 +46,15 @@ public:
 
   // debug
   void print(std::ostream &out) const;
-  
+
   // tuning
   // kinetic and potential of all objects
   double computeEnergy() const;
 
 private:
-  BBox *_bbox;     // boundary (dimensions)
-  double _dt;      // time step
-  Vec2 _g;         // gravity vector
+  BBox *_bbox; // boundary (dimensions)
+  double _dt;  // time step
+  Vec3 _g;     // gravity vector
   int _nextObjId;
   EnvObjSet _objs; // set of objects
   bool _paused;    // run state (running or paused)

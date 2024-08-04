@@ -47,14 +47,20 @@ SimParameters parseXmlConfig(std::string fileName) {
       getAttributeDouble(&paramsXml, {"environment", "frameRate"}, "value");
   result.windowFrameRate =
       getAttributeDouble(&paramsXml, {"visualization", "frameRate"}, "value");
-  result.envDimensions = Vec2(
+  result.windowDimensions = Vec3(
+      getAttributeDouble(&paramsXml, {"visualization", "dimensions"}, "width"),
+      getAttributeDouble(&paramsXml, {"visualization", "dimensions"},
+                         "height"));
+  result.envDimensions = Vec3(
       getAttributeDouble(&paramsXml, {"environment", "boundary"}, "width"),
-      getAttributeDouble(&paramsXml, {"environment", "boundary"}, "height"));
+      getAttributeDouble(&paramsXml, {"environment", "boundary"}, "height"),
+      getAttributeDouble(&paramsXml, {"environment", "boundary"}, "depth"));
   result.envGravity =
-      Vec2(getAttributeDouble(&paramsXml, {"environment", "gravity"}, "x"),
-           getAttributeDouble(&paramsXml, {"environment", "gravity"}, "y"));
-  result.envScale = getAttributeDouble(
-      &paramsXml, {"environment", "pixelsPerMeter"}, "value");
+      Vec3(getAttributeDouble(&paramsXml, {"environment", "gravity"}, "x"),
+           getAttributeDouble(&paramsXml, {"environment", "gravity"}, "y"),
+           getAttributeDouble(&paramsXml, {"environment", "gravity"}, "z"));
+  result.envScale =
+      getAttributeDouble(&paramsXml, {"environment", "unitsPerMeter"}, "value");
   result.envPauseState =
       getAttributeBool(&paramsXml, {"environment", "paused"}, "value");
   result.objSpringCoeff =
@@ -78,11 +84,18 @@ SimParameters parseXmlConfig(std::string fileName) {
       getAttributeDouble(&paramsXml, {"controls", "velocityY"}, "max"),
       getAttributeDouble(&paramsXml, {"controls", "velocityY"}, "increment"),
       getAttributeDouble(&paramsXml, {"controls", "velocityY"}, "default")};
+  result.ctrlVelY = {
+      getAttributeDouble(&paramsXml, {"controls", "velocityZ"}, "min"),
+      getAttributeDouble(&paramsXml, {"controls", "velocityZ"}, "max"),
+      getAttributeDouble(&paramsXml, {"controls", "velocityZ"}, "increment"),
+      getAttributeDouble(&paramsXml, {"controls", "velocityZ"}, "default")};
   result.ctrlVelAngular = {
       getAttributeDouble(&paramsXml, {"controls", "velocityAngular"}, "min"),
       getAttributeDouble(&paramsXml, {"controls", "velocityAngular"}, "max"),
-      getAttributeDouble(&paramsXml, {"controls", "velocityAngular"}, "increment"),
-      getAttributeDouble(&paramsXml, {"controls", "velocityAngular"}, "default")};
+      getAttributeDouble(&paramsXml, {"controls", "velocityAngular"},
+                         "increment"),
+      getAttributeDouble(&paramsXml, {"controls", "velocityAngular"},
+                         "default")};
   result.disableUserInput =
       getAttributeBool(&paramsXml, {"controls", "disableUserInput"}, "value");
   result.fullscreenMode =

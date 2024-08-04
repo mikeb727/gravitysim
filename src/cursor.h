@@ -5,7 +5,7 @@
 
 #include <random>
 
-#include "2DVec.h"
+#include "vec3d.h"
 
 // rng is global
 extern std::default_random_engine rng;
@@ -23,11 +23,11 @@ enum Action {
 // avoid remapping these to window coords until absolutely necessary!
 struct CursorData {
   CursorData();
-  double arrowX, arrowY;
-  double ballX, ballY;
-  double deltaX, deltaY;
+  double arrowX, arrowY, arrowZ;
+  double ballX, ballY, ballZ;
+  double deltaX, deltaY, deltaZ;
   double radius;
-  Vec2 vel;
+  Vec3 vel;
   double angularVel;
   bool isGlfw; // remap y component if cursor position is obtained with GLFW
   Action action;
@@ -38,8 +38,8 @@ struct CursorEmulator {
   CursorData prev;
   CursorData current;
   CursorData target;
-  Vec2 bezierP1Ball;  // p1
-  Vec2 bezierP1Arrow; // p1
+  Vec3 bezierP1Ball;  // p1
+  Vec3 bezierP1Arrow; // p1
   // cursor movement
   double tNextActionStart, tNextActionEnd;
   void doAction();

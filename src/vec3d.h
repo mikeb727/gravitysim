@@ -16,7 +16,7 @@ public:
   Vec3(); // zero vector
   Vec3(double x, double y); // zero z-component
   Vec3(double x, double y, double z);
-  Vec3(Vec3 &dir, double mag);
+  Vec3(const Vec3 &dir, double mag);
   Vec3(const Vec3 &v);
   Vec3 &operator=(const Vec3 &v);
   ~Vec3();

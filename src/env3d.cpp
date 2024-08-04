@@ -1,4 +1,4 @@
-#include "2DPhysEnv.h"
+#include "env3d.h"
 #include <iostream>
 
 #include "rectangle.h"
@@ -8,12 +8,12 @@ extern SimParameters simParams;
 
 Environment::Environment() : _dt(0), _t(0) {}
 
-Environment::Environment(double width, double height, const Vec2 &gravity,
-                         double timeStep)
-    : _bbox(new Rectangle(Vec2(0, 0), width, height)), _dt(timeStep),
+Environment::Environment(double width, double height, double depth,
+                         const Vec3 &gravity, double timeStep)
+    : _bbox(new Rectangle(Vec3(0, 0, 0), width, height, depth)), _dt(timeStep),
       _g(gravity), _nextObjId(0), _paused(false), _t(0) {
-  std::cerr << "env create dim " << _bbox->w() << "x" << _bbox->h()
-            << " gravity " << _g << " dt " << _dt << "\n";
+  std::cerr << "env create dim " << _bbox->w() << "x" << _bbox->h() << "x"
+            << _bbox->d() << " gravity " << _g << " dt " << _dt << "\n";
 }
 
 Environment::~Environment() {
@@ -40,16 +40,27 @@ void Environment::moveObjs() {
   // move unselected objects
   for (auto &obj : _objs) {
     if (obj.second.selected()) {
-      obj.second.setNetForce(Vec2());
+      obj.second.setNetForce(Vec3());
     } else {
       // record x and y offsets of object outside the environment
       obj.second.move(
           _dt,
-          Vec2(
-              fmin(obj.second.bbox()->left().x() - _bbox->left().x(), 0) +
-                  fmax(obj.second.bbox()->right().x() - _bbox->right().x(), 0),
-              fmin(obj.second.bbox()->bottom().y() - _bbox->top().y(), 0) +
-                  fmax(obj.second.bbox()->top().y() - _bbox->bottom().y(), 0)));
+          Vec3(fmin(obj.second.bbox()->point(Left).x() - _bbox->point(Left).x(),
+                    0) +
+                   fmax(obj.second.bbox()->point(Right).x() -
+                            _bbox->point(Right).x(),
+                        0),
+               fmin(obj.second.bbox()->point(Bottom).y() -
+                        _bbox->point(Bottom).y(),
+                    0) +
+                   fmax(obj.second.bbox()->point(Top).y() -
+                            _bbox->point(Top).y(),
+                        0),
+               fmin(obj.second.bbox()->point(Far).z() - _bbox->point(Far).z(),
+                    0) +
+                   fmax(obj.second.bbox()->point(Near).z() -
+                            _bbox->point(Near).z(),
+                        0)));
     }
   }
 }

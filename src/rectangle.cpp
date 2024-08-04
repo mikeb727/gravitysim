@@ -1,40 +1,46 @@
 #include "rectangle.h"
+#include <iostream>
 
-Rectangle::Rectangle(){};
+Rectangle::Rectangle() {};
 // todo add angle to created rectangles
-Rectangle::Rectangle(const Vec2 &pos, double width, double height) : BBox(pos, width, height, 0) {}
+Rectangle::Rectangle(const Vec3 &pos, double width, double height)
+    : BBox(pos, width, height, 0) {}
+Rectangle::Rectangle(const Vec3 &pos, double width, double height, double depth)
+    : BBox(pos, width, height, depth) {}
 Rectangle::~Rectangle() {}
 
-Vec2 Rectangle::center() const { return _pos + Vec2(_w / 2, _h / 2); }
-Vec2 Rectangle::top() const { return _pos + Vec2(_w / 2, 0); }
-Vec2 Rectangle::topLeft() const { return _pos; }
-Vec2 Rectangle::left() const { return _pos + Vec2(0, _h / 2); }
-Vec2 Rectangle::bottomLeft() const { return _pos + Vec2(0, _h); }
-Vec2 Rectangle::bottom() const { return _pos + Vec2(_w / 2, _h); }
-Vec2 Rectangle::bottomRight() const { return _pos + Vec2(_w, _h); }
-Vec2 Rectangle::right() const { return _pos + Vec2(_w, _h / 2); }
-Vec2 Rectangle::topRight() const { return _pos + Vec2(_w, 0); }
-
-BBox *Rectangle::shift(const Vec2 &d) const {
+BBox *Rectangle::shift(const Vec3 &d) const {
   return new Rectangle(_pos + d, _h, _w);
 }
 
 double Rectangle::distanceFrom(const BBox &b) const {
-  return (center() - b.center()).mag();
+  return (pos() - b.pos()).mag();
 }
-bool Rectangle::containsPoint(const Vec2 &p) const {
-  return (top().y() < p.y() && bottom().y() > p.y() && left().x() < p.x() &&
-          right().x() > p.x());
+
+Vec3 Rectangle::point(BBoxLocation loc) const {
+  return Vec3((_pos.x()) + (0.5 * _w * (loc & 0x03)),
+              (_pos.y()) + (0.5 * _h * ((loc >> 2) & 0x03)),
+              (_pos.z()) + (0.5 * _d * ((loc >> 4) & 0x03)));
 }
+
+bool Rectangle::containsPoint(const Vec3 &p) const {
+  return (point(Left).x() < p.x() && p.x() < point(Right).x() &&
+          point(Bottom).y() < p.y() && p.y() < point(Top).y() &&
+          point(Far).z() < p.z() && p.z() < point(Near).z());
+}
+
 bool Rectangle::containsBBox(const BBox &b) const {
-  return (containsPoint(b.top()) && containsPoint(b.topLeft()) &&
-          containsPoint(b.left()) && containsPoint(b.bottomLeft()) &&
-          containsPoint(b.bottom()) && containsPoint(b.bottomRight()) &&
-          containsPoint(b.right()) && containsPoint(b.topRight()));
+  return (containsPoint(b.point(Left | Bottom | Far)) &&
+          containsPoint(b.point(Right | Top | Near)));
 }
+
 bool Rectangle::intersects(const BBox &b) const {
-  return (containsPoint(b.top()) || containsPoint(b.topLeft()) ||
-          containsPoint(b.left()) || containsPoint(b.bottomLeft()) ||
-          containsPoint(b.bottom()) || containsPoint(b.bottomRight()) ||
-          containsPoint(b.right()) || containsPoint(b.topRight()));
+  int testPoints[] = {0,  1,  2,  4,  5,  6,  8,  9,  10, 16, 17, 18, 20,
+                      22, 24, 25, 26, 32, 33, 34, 36, 37, 38, 40, 41, 42};
+  for (int i = 0; i < 26; ++i) {
+    if (containsPoint(point((BBoxLocation)i))) {
+      return true;
+    }
+  }
+  return false;
 }
