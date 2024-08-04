@@ -2,34 +2,30 @@
 <gravitysim>
     <visualization>
         <frameRate value="120" />
+        <dimensions width="1024" height="768" />
     </visualization>
     <environment>
-        <frameRate value="300" />
-        <pixelsPerMeter value="200" />
+        <frameRate value="100" />
+        <!-- convert visualization intrinsic scale to SI -->
+        <unitsPerMeter value="4" />
         <paused value="false" />
-        <!-- boundary dimensions in pixels -->
-        <boundary width="600" height="800" wrap="false" />
-        <gravity x="0" y="-9.8" />
-        <object>
-            <position x="300" y="300" />
-            <radius value="30" />
-            <elasticity value="1.0" />
-            <velocity x="0" y="0" />
-            <color r="200" g="0" b="0" />
-        </object>
+        <!-- boundary dimensions in vis units -->
+        <boundary width="10" height="30" depth="10" />
+        <gravity x="0" y="-9.8" z="0" />
     </environment>
     <controls>
-        <disableUserInput value="false" />
+        <disableUserInput value="true" />
         <fullscreenMode value="false" />
         <radius min="0.2" max="0.5" increment="1e-2" default="0.3" />
         <elasticity min="0" max="1" increment="0.001" default="1" />
-        <velocityx min="-4" max="4" increment="0.05" default="0" />
-        <velocityy min="-4" max="4" increment="0.05" default="0" />
-        <velocitya min="-50" max="50" increment="0.5" default="0" />
+        <velocityX min="-30" max="30" increment="0.05" default="0" />
+        <velocityY min="-30" max="30" increment="0.05" default="0" />
+        <velocityZ min="-30" max="30" increment="0.05" default="0" />
+        <velocityAngular min="-50" max="50" increment="0.5" default="0" />
     </controls>
     <tuning>
-        <collisionCorrectionMultiplier value="0.99" />
-        <collisionMultiplierInterObj value="1e6" />
-        <collisionMultiplierEnvBoundary value="0" />
+        <objSpringCoeff value="1e4" />
+        <objSpringDamping value="5e1" />
+        <objFrictionCoeff value="2e-2" />
     </tuning>
 </gravitysim>
