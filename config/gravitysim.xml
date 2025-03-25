@@ -1,11 +1,11 @@
 <!-- use SI units here unless otherwise specified! -->
 <gravitysim>
     <visualization>
-        <frameRate value="120" />
+        <frameRate value="60" />
         <dimensions width="1024" height="768" />
     </visualization>
     <environment>
-        <frameRate value="100" />
+        <frameRate value="500" />
         <!-- convert visualization intrinsic scale to SI -->
         <unitsPerMeter value="4" />
         <paused value="false" />
@@ -22,10 +22,11 @@
         <velocityY min="-30" max="30" increment="0.05" default="0" />
         <velocityZ min="-30" max="30" increment="0.05" default="0" />
         <velocityAngular min="-50" max="50" increment="0.5" default="0" />
+        <angularAxis x="1" y="0" z="0" />
     </controls>
     <tuning>
         <objSpringCoeff value="1e4" />
-        <objSpringDamping value="5e1" />
-        <objFrictionCoeff value="2e-2" />
+        <objSpringDamping value="7e0" />
+        <objFrictionCoeff value="1e-2" />
     </tuning>
 </gravitysim>

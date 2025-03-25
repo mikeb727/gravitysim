@@ -23,6 +23,7 @@ struct SimParameters {
   std::vector<double> ctrlVelY;
   std::vector<double> ctrlVelZ;
   std::vector<double> ctrlVelAngular;
+  std::vector<double> ctrlAngularAxis;
   bool disableUserInput;
   bool fullscreenMode;
 };
@@ -43,6 +44,7 @@ const SimParameters defaultParams = {60,
                                      {-100, 100, 5, 0},
                                      {-100, 100, 5, 0},
                                      {-50, 50, 0.5, 0},
+                                     {0, 0, 0},
                                      false,
                                      false};
 SimParameters parseXmlConfig(std::string fileName);

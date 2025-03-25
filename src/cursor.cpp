@@ -29,25 +29,26 @@ double smoothStep(double lo, double hi, double x) {
 }
 
 CursorData::CursorData()
-    : arrowX(0), arrowY(0), ballX(0), ballY(0), ballZ(0), deltaX(0), deltaY(0),
-      deltaZ(0), isGlfw(false) {}
+    : arrowX(0), arrowY(0), arrowZ(0), ballX(0), ballY(0), ballZ(0), deltaX(0),
+      deltaY(0), deltaZ(0), isGlfw(false) {}
 
 CursorEmulator::CursorEmulator(GraphicsTools::WindowBase *win)
     : _win(win), tNextActionEnd(0), tNextActionStart(0) {
   using namespace std::chrono;
   Environment *env = static_cast<Environment *>(_win->userPointer("env"));
-  current.ballX = env->bbox()->w() * 0.5;
-  current.ballY = env->bbox()->h() * 0.5;
-  current.ballZ = env->bbox()->d() * 0.5;
-  current.arrowX = env->bbox()->w() * 0.5;
-  current.arrowY = env->bbox()->h() * 0.5;
-  current.arrowZ = env->bbox()->d() * 0.5;
+  current.ballX = env->bbox().w() * 0.5;
+  current.ballY = env->bbox().h() * 0.5;
+  current.ballZ = env->bbox().d() * 0.5;
+  current.arrowX = env->bbox().w() * 0.5;
+  current.arrowY = env->bbox().h() * 0.5;
+  current.arrowZ = env->bbox().d() * 0.5;
   current.deltaX = 0;
   current.deltaY = 0;
   current.deltaZ = 0;
   current.radius = 0;
   prev = current;
   current.action = Null;
+  current.angularAxis = Vec3(1, 0, 0);
 }
 
 void CursorEmulator::update() {
@@ -64,13 +65,16 @@ void CursorEmulator::update() {
 
       ControlSet *ctrls =
           static_cast<ControlSet *>(_win->userPointer("ctrlSet"));
-      (*ctrls)("velx").setValue(current.deltaX / simParams.envScale);
-      (*ctrls)("vely").setValue(current.deltaY / simParams.envScale);
-      (*ctrls)("velz").setValue(current.deltaZ / simParams.envScale);
-      (*ctrls)("radius").setValue(current.radius * simParams.envScale * 0.9);
+      (*ctrls)("velx").setValue(current.deltaX);
+      (*ctrls)("vely").setValue(current.deltaY);
+      (*ctrls)("velz").setValue(current.deltaZ);
+      (*ctrls)("radius").setValue(current.radius);
+      (*ctrls)("vela").setValue(current.angularSpeed);
+      (*ctrls)("angularAxisX").setValue(current.angularAxis.x());
+      (*ctrls)("angularAxisY").setValue(current.angularAxis.y());
+      (*ctrls)("angularAxisZ").setValue(current.angularAxis.z());
 
       Environment *env = static_cast<Environment *>(_win->userPointer("env"));
-
       if (env->objs().size() > 20) {
         double deleteObjs = actionDist(rng);
         if (deleteObjs < (1 - std::exp(-0.015 * env->objs().size())))
@@ -85,7 +89,7 @@ void CursorEmulator::update() {
         }
       }
       std::exponential_distribution<double> startTimeDist(0.25);
-      std::uniform_real_distribution<double> durationDist(0.5, 2.0);
+      std::uniform_real_distribution<double> durationDist(1.0, 2.0);
       tNextActionStart = tNow + (10 * startTimeDist(rng));
       tNextActionEnd = tNextActionStart + (1000 * durationDist(rng));
     }
@@ -117,10 +121,10 @@ void CursorEmulator::computePos(double tNow) {
 void CursorEmulator::generatePos() {
   current.action = ChangePosition;
   Environment *env = static_cast<Environment *>(_win->userPointer("env"));
-  std::uniform_real_distribution<float> xDist(3, env->bbox()->w() - 3);
-  std::uniform_real_distribution<float> yDist(env->bbox()->h() / 2.0,
-                                              env->bbox()->h() - 3);
-  std::uniform_real_distribution<float> zDist(3, env->bbox()->d() - 3);
+  std::uniform_real_distribution<float> xDist(3, env->bbox().w() - 3);
+  std::uniform_real_distribution<float> yDist(env->bbox().h() / 2.0,
+                                              env->bbox().h() - 3);
+  std::uniform_real_distribution<float> zDist(3, env->bbox().d() - 3);
 
   target.ballX = xDist(rng);
   target.ballY = yDist(rng);
@@ -134,8 +138,9 @@ void CursorEmulator::generatePos() {
 void CursorEmulator::computeVel(double tNow) {
   double tBlend = smoothStep(tNextActionStart, tNextActionEnd, tNow);
   if (current.action == ChangeVelocity) {
-    Vec3 arrowPosNew = bezier(Vec3(prev.arrowX, prev.arrowY), bezierP1Arrow,
-                              Vec3(target.arrowX, target.arrowY), tBlend);
+    Vec3 arrowPosNew =
+        bezier(Vec3(prev.arrowX, prev.arrowY, prev.arrowZ), bezierP1Arrow,
+               Vec3(target.arrowX, target.arrowY, target.arrowZ), tBlend);
     current.arrowX = arrowPosNew.x();
     current.arrowY = arrowPosNew.y();
     current.arrowZ = arrowPosNew.z();
@@ -152,7 +157,7 @@ void CursorEmulator::computeVel(double tNow) {
 void CursorEmulator::generateVel() {
   current.action = ChangeVelocity;
   using namespace std::chrono;
-  std::uniform_real_distribution<float> deltaDist(-6, 6);
+  std::uniform_real_distribution<float> deltaDist(-18, 18);
   target.deltaX = deltaDist(rng);
   target.deltaY = deltaDist(rng);
   target.deltaZ = deltaDist(rng);
@@ -181,18 +186,36 @@ void CursorEmulator::generateRadius() {
 }
 
 void CursorEmulator::computeAngularVel(double tNow) {
-  double blend = smoothStep(tNextActionStart, tNextActionEnd, tNow);
-  double angularVelNew =
+  float blend = smoothStep(tNextActionStart, tNextActionEnd, tNow);
+  double angularSpeedNew =
       current.action == ChangeAngularVel
-          ? (1 - blend) * prev.angularVel + blend * target.angularVel
-          : prev.angularVel;
-  current.angularVel = angularVelNew;
+          ? (1 - blend) * prev.angularSpeed + blend * target.angularSpeed
+          : prev.angularSpeed;
+  current.angularSpeed = angularSpeedNew;
+  if (current.action == ChangeAngularVel) {
+    glm::vec3 prevAxis(prev.angularAxis.x(), prev.angularAxis.y(),
+                       prev.angularAxis.z());
+    glm::vec3 targetAxis(target.angularAxis.x(), target.angularAxis.y(),
+                         target.angularAxis.z());
+    glm::vec3 newAxis =
+        glm::rotate(
+            blend * std::acos(glm::dot(glm::normalize(prevAxis),
+                                       glm::normalize(targetAxis))),
+            glm::cross(glm::normalize(prevAxis), glm::normalize(targetAxis))) *
+        glm::vec4(prevAxis, 1.0);
+    current.angularAxis = Vec3(newAxis.x, newAxis.y, newAxis.z);
+  } else {
+    current.angularAxis = prev.angularAxis;
+  }
 }
 
 void CursorEmulator::generateAngularVel() {
   current.action = ChangeAngularVel;
   std::uniform_real_distribution<float> rngDist(-50, 50);
-  target.angularVel = rngDist(rng);
+  target.angularSpeed = rngDist(rng);
+  std::uniform_real_distribution<float> axisDist(-1, 1);
+  target.angularAxis = Vec3(axisDist(rng), axisDist(rng), axisDist(rng)).unit();
+  std::cerr << "new angular axis " << target.angularAxis << "\n"; 
 }
 
 void CursorEmulator::createObj() {

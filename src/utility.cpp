@@ -1,5 +1,6 @@
 #include "utility.h"
 #include "ball.h"
+#include "bbox.h"
 
 #include <chrono>
 #include <mb-libs/colors.h>
@@ -10,8 +11,8 @@ Vec3 remapGlfwCursor(Vec3 vec, GraphicsTools::Window *win) {
   Environment *env = static_cast<Environment *>(win->userPointer("env"));
   assert(env);
   return Vec3(
-      GraphicsTools::remap(vec.x(), 0, env->bbox()->w(), 0, win->width()),
-      GraphicsTools::remap(vec.y(), 0, env->bbox()->h(), win->height(), 0));
+      GraphicsTools::remap(vec.x(), 0, env->bbox().w(), 0, win->width()),
+      GraphicsTools::remap(vec.y(), 0, env->bbox().h(), win->height(), 0));
 }
 
 double computeTNow() {
@@ -50,7 +51,7 @@ void createObj(GraphicsTools::Window *win) {
                        cursorEmu->current.ballZ);
 
   for (auto &obj : env->objs()) {
-    if (obj.second.bbox()->containsPoint(candidateObjPos)) {
+    if (obj.second.bbox().containsPoint(candidateObjPos)) {
       objAtCandPos = true;
     }
     obj.second.setSelectState(false);
@@ -59,26 +60,29 @@ void createObj(GraphicsTools::Window *win) {
   if (!objAtCandPos) {
     bool noOverlap = true;
     for (auto &obj : env->objs()) {
-      if (obj.second.bbox()->intersects(
-              Circle(candidateObjPos, (*ctrls)["radius"] * simParams.envScale))) {
+      if (obj.second.bbox().intersects(
+              BBox(candidateObjPos,
+                   (*ctrls)["radius"] * 2.0 * simParams.envScale))) {
         noOverlap = false;
         break;
       }
     }
-    if (noOverlap && env->bbox()->containsBBox(
-                         Circle(candidateObjPos, (*ctrls)["radius"] * simParams.envScale))) {
-      env->addObj(
-          Ball(new Circle(candidateObjPos, (*ctrls)["radius"] * simParams.envScale),
-               pow((*ctrls)["radius"] * simParams.envScale, 3), candidateObjPos,
-               Vec3((*ctrls)["velx"], (*ctrls)["vely"], (*ctrls)["velz"]) *
-                   simParams.envScale,
-               1, Vec3()));
+    if (noOverlap &&
+        env->bbox().containsBBox(BBox(
+            candidateObjPos, (*ctrls)["radius"] * 2.0 * simParams.envScale))) {
+      env->addObj(Ball(
+          BBox(candidateObjPos, (*ctrls)["radius"] * 2.0 * simParams.envScale),
+          pow((*ctrls)["radius"] * simParams.envScale, 3), candidateObjPos,
+          Vec3((*ctrls)["velx"], (*ctrls)["vely"], (*ctrls)["velz"]) *
+              simParams.envScale,
+          1, Vec3()));
       GraphicsTools::Material mat = {GraphicsTools::randomColor(), NULL,
                                      0.5 * GraphicsTools::Colors::White, 4};
       om->emplace(env->lastObjId(), GraphicsTools::RenderObject());
       om->at(env->lastObjId()).setShader(shader);
       om->at(env->lastObjId()).setMaterial(mat);
-      om->at(env->lastObjId()).genSphere((*ctrls)["radius"] * simParams.envScale, 16, 16);
+      om->at(env->lastObjId())
+          .genSphere((*ctrls)["radius"] * simParams.envScale, 16, 16);
       om->at(env->lastObjId())
           .setPos(glm::vec3(candidateObjPos.x(), candidateObjPos.y(),
                             candidateObjPos.z()));

@@ -2,8 +2,10 @@
 
 #include <argparse/argparse.hpp>
 #include <iostream>
+#include <mb-libs/colors.h>
 #include <mb-libs/mbgfx.h>
 
+#include "control.h"
 #include "cursor.h"
 #include "env3d.h"
 #include "utility.h"
@@ -56,13 +58,49 @@ void drawSim(GraphicsTools::Window *win) {
 
   staticObjs->at(*cursorEmuId).clearGeometry();
   staticObjs->at(*cursorEmuId)
-      .genSphere(cursorEmu->current.radius * simParams.envScale * 0.9, 16, 16);
+      .genSphere(cursorEmu->current.radius * simParams.envScale * 0.5, 16, 16);
   staticObjs->at(*cursorEmuId)
       .setPos(glm::vec3(cursorEmu->current.ballX, cursorEmu->current.ballY,
                         cursorEmu->current.ballZ));
 
+  staticObjs->at(*cursorEmuId + 1).clearGeometry();
+  staticObjs->at(*cursorEmuId + 1)
+      .genArrow(1, 20, cursorEmu->current.ballX, cursorEmu->current.ballY,
+                cursorEmu->current.ballZ,
+                cursorEmu->current.ballX + cursorEmu->current.deltaX,
+                cursorEmu->current.ballY + cursorEmu->current.deltaY,
+                cursorEmu->current.ballZ + cursorEmu->current.deltaZ);
+
+  staticObjs->at(*cursorEmuId + 2).clearGeometry();
+  float spinPoints[30];
+  for (int i = 0; i < 10; ++i) {
+    float pointAngle = (cursorEmu->current.angularSpeed > 0 ? 1 : -1) * (1.8 * M_PI * i / 10) +
+                       (cursorEmu->current.angularSpeed * 0.05 * glfwGetTime());
+    float rotationAngle =
+        glm::dot(glm::normalize(glm::vec3(cursorEmu->current.angularAxis.x(),
+                                          cursorEmu->current.angularAxis.y(),
+                                          cursorEmu->current.angularAxis.z())),
+                 {1, 0, 0});
+    glm::vec3 rotationAxis = glm::cross(
+        glm::normalize(glm::vec3(cursorEmu->current.angularAxis.x(),
+                                 cursorEmu->current.angularAxis.y(),
+                                 cursorEmu->current.angularAxis.z())),
+        {1, 0, 0});
+    glm::vec3 arrowPoint((0.5 + fabs(cursorEmu->current.angularSpeed / 50) + cursorEmu->current.radius) * cos(pointAngle),
+                         (0.5 + fabs(cursorEmu->current.angularSpeed / 50) + cursorEmu->current.radius) * -sin(pointAngle), 0);
+
+    arrowPoint =
+        glm::rotate(rotationAngle, rotationAxis) * glm::vec4(arrowPoint, 1.0);
+
+    spinPoints[3 * i] = cursorEmu->current.ballX + arrowPoint.x;
+    spinPoints[3 * i + 1] = cursorEmu->current.ballY + arrowPoint.y;
+    spinPoints[3 * i + 2] = cursorEmu->current.ballZ + arrowPoint.z;
+  }
+  staticObjs->at(*cursorEmuId + 2)
+      .genMultiArrow(fmin(1, fabs(cursorEmu->current.angularSpeed / 25)), 20, 10, spinPoints);
+
   for (auto &obj : env->objs()) {
-    Vec3 drawPos = obj.second.bbox()->pos();
+    Vec3 drawPos = obj.second.bbox().pos();
     Vec3 drawAxis;
     double drawAngle;
     obj.second.rot().toAxisAngle(drawAxis, drawAngle);
@@ -93,16 +131,16 @@ void setupEnvWalls(GraphicsTools::Window *win) {
   floor.setMaterial(*wallMat);
   floor.setTexture(wallTex);
   floor.setShader(shader);
-  floor.genPlane(env->bbox()->w(), env->bbox()->d());
-  floor.setPos(glm::vec3(0.5 * env->bbox()->w(), 0, 0.5 * env->bbox()->d()));
+  floor.genPlane(env->bbox().w(), env->bbox().d());
+  floor.setPos(glm::vec3(0.5 * env->bbox().w(), 0, 0.5 * env->bbox().d()));
   renderObjSet->emplace(renderObjSet->size(), floor);
 
   GraphicsTools::RenderObject wall1;
   wall1.setMaterial(*wallMat);
   wall1.setTexture(wallTex);
   wall1.setShader(shader);
-  wall1.genPlane(env->bbox()->h(), env->bbox()->d());
-  wall1.setPos(glm::vec3(0, 0.5 * env->bbox()->h(), 0.5 * env->bbox()->d()));
+  wall1.genPlane(env->bbox().h(), env->bbox().d());
+  wall1.setPos(glm::vec3(0, 0.5 * env->bbox().h(), 0.5 * env->bbox().d()));
   wall1.setRotation(glm::vec3(0, 0, 1), -0.5 * M_PI);
   renderObjSet->emplace(renderObjSet->size(), wall1);
 
@@ -110,9 +148,9 @@ void setupEnvWalls(GraphicsTools::Window *win) {
   wall2.setMaterial(*wallMat);
   wall2.setTexture(wallTex);
   wall2.setShader(shader);
-  wall2.genPlane(env->bbox()->h(), env->bbox()->d());
-  wall2.setPos(glm::vec3(env->bbox()->w(), 0.5 * env->bbox()->h(),
-                         0.5 * env->bbox()->d()));
+  wall2.genPlane(env->bbox().h(), env->bbox().d());
+  wall2.setPos(glm::vec3(env->bbox().w(), 0.5 * env->bbox().h(),
+                         0.5 * env->bbox().d()));
   wall2.setRotation(glm::vec3(0, 0, 1), 0.5 * M_PI);
   renderObjSet->emplace(renderObjSet->size(), wall2);
 
@@ -120,8 +158,8 @@ void setupEnvWalls(GraphicsTools::Window *win) {
   wall3.setMaterial(*wallMat);
   wall3.setTexture(wallTex);
   wall3.setShader(shader);
-  wall3.genPlane(env->bbox()->w(), env->bbox()->h());
-  wall3.setPos(glm::vec3(0.5 * env->bbox()->w(), 0.5 * env->bbox()->h(), 0));
+  wall3.genPlane(env->bbox().w(), env->bbox().h());
+  wall3.setPos(glm::vec3(0.5 * env->bbox().w(), 0.5 * env->bbox().h(), 0));
   wall3.setRotation(glm::vec3(1, 0, 0), 0.5 * M_PI);
   renderObjSet->emplace(renderObjSet->size(), wall3);
 
@@ -129,9 +167,9 @@ void setupEnvWalls(GraphicsTools::Window *win) {
   wall4.setMaterial(*wallMat);
   wall4.setTexture(wallTex);
   wall4.setShader(shader);
-  wall4.genPlane(env->bbox()->w(), env->bbox()->h());
-  wall4.setPos(glm::vec3(0.5 * env->bbox()->w(), 0.5 * env->bbox()->h(),
-                         env->bbox()->d()));
+  wall4.genPlane(env->bbox().w(), env->bbox().h());
+  wall4.setPos(glm::vec3(0.5 * env->bbox().w(), 0.5 * env->bbox().h(),
+                         env->bbox().d()));
   wall4.setRotation(glm::vec3(1, 0, 0), -0.5 * M_PI);
   renderObjSet->emplace(renderObjSet->size(), wall4);
 
@@ -139,9 +177,9 @@ void setupEnvWalls(GraphicsTools::Window *win) {
   ceiling.setMaterial(*wallMat);
   ceiling.setTexture(wallTex);
   ceiling.setShader(shader);
-  ceiling.genPlane(env->bbox()->w(), env->bbox()->d());
-  ceiling.setPos(glm::vec3(0.5 * env->bbox()->w(), env->bbox()->h(),
-                           0.5 * env->bbox()->d()));
+  ceiling.genPlane(env->bbox().w(), env->bbox().d());
+  ceiling.setPos(glm::vec3(0.5 * env->bbox().w(), env->bbox().h(),
+                           0.5 * env->bbox().d()));
   ceiling.setRotation(glm::vec3(1, 0, 0), M_PI);
   renderObjSet->emplace(renderObjSet->size(), ceiling);
 }
@@ -219,6 +257,7 @@ int main(int argc, char *argv[]) {
   // timing vars
   double tLastWindow = 0;
   double tLastEnv = 0;
+  double tLastPrint = 0;
 
   GraphicsTools::InitGraphics();
   GraphicsTools::Window window("Gravity Sim 3D!",
@@ -275,6 +314,13 @@ int main(int argc, char *argv[]) {
   ctrlSet.addCtrl("velz", Control("Z velocity", simParams.ctrlVelZ[0],
                                   simParams.ctrlVelZ[1], simParams.ctrlVelZ[2],
                                   simParams.ctrlVelZ[3]));
+  ctrlSet.addCtrl(
+      "vela", Control("Angular velocity", simParams.ctrlVelAngular[0],
+                      simParams.ctrlVelAngular[1], simParams.ctrlVelAngular[2],
+                      simParams.ctrlVelAngular[3]));
+  ctrlSet.addCtrl("angularAxisX", Control("Angular axis X", -1, 1, 0.01, 0));
+  ctrlSet.addCtrl("angularAxisY", Control("Angular axis Y", -1, 1, 0.01, 0));
+  ctrlSet.addCtrl("angularAxisZ", Control("Angular axis Z", -1, 1, 0.01, 0));
   window.setUserPointer("ctrlSet", &ctrlSet);
 
   Texture checkerboardTex("assets/check.png");
@@ -293,22 +339,36 @@ int main(int argc, char *argv[]) {
     sc.addRenderObject(&staticObjs.at(i));
   }
 
-  cam.setPos(glm::vec3(0.5 * env.bbox()->w(), 0.5 * env.bbox()->h(),
-                       1.75 * env.bbox()->d()));
+  cam.setPos(glm::vec3(0.5 * env.bbox().w(), 0.5 * env.bbox().h(),
+                       1.75 * env.bbox().d()));
 
   CursorEmulator cursorEmu(&window);
   cursorEmu.active = true;
   window.setUserPointer("cursorEmu", &cursorEmu);
   int cursorObjId = staticObjs.size();
   window.setUserPointer("cursorEmuObjId", &cursorObjId);
+
   GraphicsTools::RenderObject cursorDisplay;
   cursorDisplay.setMaterial(GraphicsTools::Material(
-      {GraphicsTools::blend(GraphicsTools::Colors::Blue, 0.3,
-                            GraphicsTools::Colors::White, 0.7),
-       NULL, GraphicsTools::Colors::White, 32}));
+      {GraphicsTools::blend(GraphicsTools::Colors::Blue, 0.2, GraphicsTools::Colors::White, 0.8), NULL, GraphicsTools::Colors::White, 2}));
+
   cursorDisplay.setShader(&phong);
   staticObjs.emplace(cursorObjId, cursorDisplay);
   sc.addRenderObject(&staticObjs.at(cursorObjId));
+
+  GraphicsTools::RenderObject arrowDisplay;
+  arrowDisplay.setMaterial(GraphicsTools::Material(
+      {GraphicsTools::blend(GraphicsTools::Colors::Red, 0.2, GraphicsTools::Colors::White, 0.8), NULL, GraphicsTools::Colors::White, 2}));
+  arrowDisplay.setShader(&phong);
+  staticObjs.emplace(cursorObjId + 1, arrowDisplay);
+  sc.addRenderObject(&staticObjs.at(cursorObjId + 1));
+
+  GraphicsTools::RenderObject spinDisplay;
+  spinDisplay.setMaterial(GraphicsTools::Material(
+      {GraphicsTools::blend(GraphicsTools::Colors::Green, 0.2, GraphicsTools::Colors::White, 0.8), NULL, GraphicsTools::Colors::White, 2}));
+  spinDisplay.setShader(&phong);
+  staticObjs.emplace(cursorObjId + 2, spinDisplay);
+  sc.addRenderObject(&staticObjs.at(cursorObjId + 2));
 
   env.setNextId(staticObjs.size()); // keep walls from being deleted
 

@@ -96,6 +96,11 @@ SimParameters parseXmlConfig(std::string fileName) {
                          "increment"),
       getAttributeDouble(&paramsXml, {"controls", "velocityAngular"},
                          "default")};
+  result.ctrlAngularAxis = {
+      getAttributeDouble(&paramsXml, {"controls", "velocityAngular"}, "x"),
+      getAttributeDouble(&paramsXml, {"controls", "velocityAngular"}, "y"),
+      getAttributeDouble(&paramsXml, {"controls", "velocityAngular"}, "z"),
+  };
   result.disableUserInput =
       getAttributeBool(&paramsXml, {"controls", "disableUserInput"}, "value");
   result.fullscreenMode =

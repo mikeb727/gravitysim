@@ -4,7 +4,7 @@
 #ifndef OBJECT_H
 #define OBJECT_H
 
-#include "circle.h"
+#include "bbox.h"
 #include "quaternion.h"
 #include "simParams.h"
 #include "vec3d.h"
@@ -18,12 +18,11 @@ class Ball {
 public:
   // ctor, dtor
   Ball();
-  Ball(BBox *bounds, double mass, const Vec3 &position, const Vec3 &velocity,
-         const double &elasticity, const Vec3 &aVel);
-  ~Ball();
+  Ball(BBox bounds, double mass, const Vec3 &position, const Vec3 &velocity,
+       const double &elasticity, const Vec3 &aVel);
 
   // getters
-  BBox *bbox() const { return _bbox; }; // can be used for position
+  BBox bbox() const { return _bbox; }; // can be used for position
   Quaternion rot() const { return _rot; };
   const Vec3 &vel() const { return _vel; };
   const Vec3 &accel() const { return _accel; };
@@ -34,14 +33,14 @@ public:
   double penergy() const;
 
   // setters
-  void setPos(const Vec3 &v) { _bbox->setPos(v); };
+  void setPos(const Vec3 &v) { _bbox.setPos(v); };
   void setVel(const Vec3 &v) { _vel = v; };
   void setAccel(const Vec3 &v) { _accel = v; };
   void setSelectState(bool state) { _selected = state; };
   void setNetForce(const Vec3 &v) { _fNet = v; }
 
   // physics/motion operations
-  BBox *nextBBox(double dt) const; // object bbox at next time step
+  BBox nextBBox(double dt) const; // object bbox at next time step
   bool collidesWith(
       double dt,
       const Ball &obj) const; // whether bbox collides with other object's
@@ -54,7 +53,7 @@ public:
 
 private:
   std::string objType;
-  BBox *_bbox;     // object bounding box
+  BBox _bbox;     // object bounding box
   Quaternion _rot; // object rotational orientation
   Vec3 _vel;       // object velocity
   Vec3 _accel;     // object acceleration

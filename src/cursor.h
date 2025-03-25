@@ -28,7 +28,8 @@ struct CursorData {
   double deltaX, deltaY, deltaZ;
   double radius;
   Vec3 vel;
-  double angularVel;
+  Vec3 angularAxis;
+  double angularSpeed;
   bool isGlfw; // remap y component if cursor position is obtained with GLFW
   Action action;
 };

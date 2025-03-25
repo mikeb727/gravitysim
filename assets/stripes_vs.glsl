@@ -32,5 +32,5 @@ void main(){
     // assign each vertex a "black" or "white" value
     // to be multiplied with Phong diffuse color
     // vs_out.bw = int(floor(((gl_VertexID % 12) / 6) + floor(gl_VertexID / 96))) % 2;
-    vs_out.bw = int(floor((gl_VertexID % 12) / 6));
+    vs_out.bw = int(floor((gl_VertexID % 48) / 24));
 }

@@ -25,18 +25,20 @@ public:
   ~Environment();
 
   // getters
-  const BBox *bbox() const { return _bbox; };
+  const BBox bbox() const { return _bbox; };
   double dt() const { return _dt; };
   const Vec3 &gravity() const { return _g; };
   EnvObjSet &objs() { return _objs; };
   int time() const { return _t; };
 
   // object operations
-  void addObj(const Ball &obj) { _objs.emplace(_nextObjId++, obj); };
+  void addObj(const Ball &obj) { _objs[_nextObjId++] =obj; };
   void clearObjs() { _objs.clear(); };
   int lastObjId() const { return _nextObjId - 1; };
   void removeObj(int id) { _objs.erase(id); };
-  void setNextId(int id) { _nextObjId = id; }; // to handle issues with non-ball renderobject deletion
+  void setNextId(int id) {
+    _nextObjId = id;
+  }; // to handle issues with non-ball renderobject deletion
 
   // simulation operations
   void moveObjs();
@@ -52,7 +54,7 @@ public:
   double computeEnergy() const;
 
 private:
-  BBox *_bbox; // boundary (dimensions)
+  BBox _bbox; // boundary (dimensions)
   double _dt;  // time step
   Vec3 _g;     // gravity vector
   int _nextObjId;
