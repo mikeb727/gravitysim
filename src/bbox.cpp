@@ -10,14 +10,9 @@ BBox::BBox(const Vec3 &pos, double width, double height, double depth)
       _props(BBoxProperties::None) {}
 
 Vec3 BBox::point(BBoxLocation loc) const {
-  if (_props == IsSpherical) {
-    return Vec3(_pos.x() - (0.5 * _w) + (0.5 * _w * (loc & 0x03)),
-                _pos.y() - (0.5 * _h) + (0.5 * _h * ((loc >> 2) & 0x03)),
-                _pos.z() - (0.5 * _d) + (0.5 * _d * ((loc >> 4) & 0x03)));
-  }
-  return Vec3((_pos.x()) + (0.5 * _w * (loc & 0x03)),
-              (_pos.y()) + (0.5 * _h * ((loc >> 2) & 0x03)),
-              (_pos.z()) + (0.5 * _d * ((loc >> 4) & 0x03)));
+  return Vec3(_pos.x() - (0.5 * _w) + (0.5 * _w * (loc & 0x03)),
+              _pos.y() - (0.5 * _h) + (0.5 * _h * ((loc >> 2) & 0x03)),
+              _pos.z() - (0.5 * _d) + (0.5 * _d * ((loc >> 4) & 0x03)));
 }
 
 BBoxLocation operator|(BBoxLocation lv, BBoxLocation rv) {

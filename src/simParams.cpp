@@ -97,9 +97,9 @@ SimParameters parseXmlConfig(std::string fileName) {
       getAttributeDouble(&paramsXml, {"controls", "velocityAngular"},
                          "default")};
   result.ctrlAngularAxis = {
-      getAttributeDouble(&paramsXml, {"controls", "velocityAngular"}, "x"),
-      getAttributeDouble(&paramsXml, {"controls", "velocityAngular"}, "y"),
-      getAttributeDouble(&paramsXml, {"controls", "velocityAngular"}, "z"),
+      getAttributeDouble(&paramsXml, {"controls", "angularAxis"}, "x"),
+      getAttributeDouble(&paramsXml, {"controls", "angularAxis"}, "y"),
+      getAttributeDouble(&paramsXml, {"controls", "angularAxis"}, "z"),
   };
   result.disableUserInput =
       getAttributeBool(&paramsXml, {"controls", "disableUserInput"}, "value");

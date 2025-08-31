@@ -5,7 +5,12 @@ Control::Control() {}
 
 Control::Control(std::string name, double min, double max, double inc,
                  double defaultVal)
-    : _name(name), _min(min), _max(max), _inc(inc), _value(defaultVal) {}
+    : _name(name), _min(min), _max(max), _inc(inc), _value(defaultVal),
+      _def(defaultVal) {}
+
+void Control::reset(){
+  _value = _def;
+}
 
 void Control::setValue(double newValue) {
   _value = std::clamp(newValue, _min, _max);
@@ -29,6 +34,6 @@ double ControlSet::operator[](std::string ctrlName) {
   return _ctrls.at(ctrlName).getValue();
 }
 
-void ControlSet::addCtrl(std::string ctrlName, Control ctrl){
+void ControlSet::addCtrl(std::string ctrlName, Control ctrl) {
   _ctrls.emplace(ctrlName, ctrl);
 }

@@ -9,6 +9,7 @@ public:
   Control();
   Control(std::string name, double min, double max, double inc,
           double defaultVal);
+  void reset();
   void setValue(double newValue);
   void changeValue(double delta);
   double getValue() const { return _value; };
@@ -18,7 +19,7 @@ public:
 private:
   std::string _name;
   // _inc is default increment from xml
-  double _min, _value, _inc, _max;
+  double _min, _value, _inc, _max, _def;
 };
 
 class ControlSet {

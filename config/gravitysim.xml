@@ -10,23 +10,23 @@
         <unitsPerMeter value="4" />
         <paused value="false" />
         <!-- boundary dimensions in vis units -->
-        <boundary width="10" height="30" depth="10" />
+        <boundary width="25" height="25" depth="25" />
         <gravity x="0" y="-9.8" z="0" />
     </environment>
     <controls>
         <disableUserInput value="true" />
-        <fullscreenMode value="false" />
+        <fullscreenMode value="true" />
         <radius min="0.2" max="0.5" increment="1e-2" default="0.3" />
         <elasticity min="0" max="1" increment="0.001" default="1" />
         <velocityX min="-30" max="30" increment="0.05" default="0" />
         <velocityY min="-30" max="30" increment="0.05" default="0" />
         <velocityZ min="-30" max="30" increment="0.05" default="0" />
-        <velocityAngular min="-50" max="50" increment="0.5" default="0" />
-        <angularAxis x="1" y="0" z="0" />
+        <velocityAngular min="-100" max="100" increment="0.5" default="0" />
+        <angularAxis x="1" y="1" z="1" />
     </controls>
     <tuning>
         <objSpringCoeff value="1e4" />
-        <objSpringDamping value="7e0" />
-        <objFrictionCoeff value="1e-2" />
+        <objSpringDamping value="1e1" />
+        <objFrictionCoeff value="2.5e-2" />
     </tuning>
 </gravitysim>

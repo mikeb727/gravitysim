@@ -36,12 +36,12 @@ CursorEmulator::CursorEmulator(GraphicsTools::WindowBase *win)
     : _win(win), tNextActionEnd(0), tNextActionStart(0) {
   using namespace std::chrono;
   Environment *env = static_cast<Environment *>(_win->userPointer("env"));
-  current.ballX = env->bbox().w() * 0.5;
-  current.ballY = env->bbox().h() * 0.5;
-  current.ballZ = env->bbox().d() * 0.5;
-  current.arrowX = env->bbox().w() * 0.5;
-  current.arrowY = env->bbox().h() * 0.5;
-  current.arrowZ = env->bbox().d() * 0.5;
+  current.ballX = 0.0;
+  current.ballY = 0.0;
+  current.ballZ = 0.0;
+  current.arrowX = 0.0;
+  current.arrowY = 0.0;
+  current.arrowZ = 0.0;
   current.deltaX = 0;
   current.deltaY = 0;
   current.deltaZ = 0;
@@ -63,16 +63,16 @@ void CursorEmulator::update() {
       prev.arrowY = current.ballY + current.deltaY;
       prev.arrowZ = current.ballZ + current.deltaZ;
 
-      ControlSet *ctrls =
-          static_cast<ControlSet *>(_win->userPointer("ctrlSet"));
-      (*ctrls)("velx").setValue(current.deltaX);
-      (*ctrls)("vely").setValue(current.deltaY);
-      (*ctrls)("velz").setValue(current.deltaZ);
-      (*ctrls)("radius").setValue(current.radius);
-      (*ctrls)("vela").setValue(current.angularSpeed);
-      (*ctrls)("angularAxisX").setValue(current.angularAxis.x());
-      (*ctrls)("angularAxisY").setValue(current.angularAxis.y());
-      (*ctrls)("angularAxisZ").setValue(current.angularAxis.z());
+      // ControlSet *ctrls =
+      //     static_cast<ControlSet *>(_win->userPointer("ctrlSet"));
+      // (*ctrls)("velx").setValue(current.deltaX);
+      // (*ctrls)("vely").setValue(current.deltaY);
+      // (*ctrls)("velz").setValue(current.deltaZ);
+      // (*ctrls)("radius").setValue(current.radius);
+      // (*ctrls)("vela").setValue(current.angularSpeed);
+      // (*ctrls)("angularAxisX").setValue(current.angularAxis.x());
+      // (*ctrls)("angularAxisY").setValue(current.angularAxis.y());
+      // (*ctrls)("angularAxisZ").setValue(current.angularAxis.z());
 
       Environment *env = static_cast<Environment *>(_win->userPointer("env"));
       if (env->objs().size() > 20) {
@@ -121,10 +121,11 @@ void CursorEmulator::computePos(double tNow) {
 void CursorEmulator::generatePos() {
   current.action = ChangePosition;
   Environment *env = static_cast<Environment *>(_win->userPointer("env"));
-  std::uniform_real_distribution<float> xDist(3, env->bbox().w() - 3);
-  std::uniform_real_distribution<float> yDist(env->bbox().h() / 2.0,
-                                              env->bbox().h() - 3);
-  std::uniform_real_distribution<float> zDist(3, env->bbox().d() - 3);
+  std::uniform_real_distribution<float> xDist(3 - (0.5 * env->bbox().w()),
+                                              (0.5 * env->bbox().w()) - 3);
+  std::uniform_real_distribution<float> yDist(0, (0.5 * env->bbox().h()) - 3);
+  std::uniform_real_distribution<float> zDist(3 - (0.5 * env->bbox().d()),
+                                              (0.5 * env->bbox().d()) - 3);
 
   target.ballX = xDist(rng);
   target.ballY = yDist(rng);
@@ -215,7 +216,7 @@ void CursorEmulator::generateAngularVel() {
   target.angularSpeed = rngDist(rng);
   std::uniform_real_distribution<float> axisDist(-1, 1);
   target.angularAxis = Vec3(axisDist(rng), axisDist(rng), axisDist(rng)).unit();
-  std::cerr << "new angular axis " << target.angularAxis << "\n"; 
+  std::cerr << "new angular axis " << target.angularAxis << "\n";
 }
 
 void CursorEmulator::createObj() {
