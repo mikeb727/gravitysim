@@ -74,6 +74,11 @@ SimParameters parseXmlConfig(std::string fileName) {
       getAttributeDouble(&paramsXml, {"controls", "radius"}, "max"),
       getAttributeDouble(&paramsXml, {"controls", "radius"}, "increment"),
       getAttributeDouble(&paramsXml, {"controls", "radius"}, "default")};
+  result.ctrlVelForward = {
+      getAttributeDouble(&paramsXml, {"controls", "velocityForward"}, "min"),
+      getAttributeDouble(&paramsXml, {"controls", "velocityForward"}, "max"),
+      getAttributeDouble(&paramsXml, {"controls", "velocityForward"}, "increment"),
+      getAttributeDouble(&paramsXml, {"controls", "velocityForward"}, "default")};
   result.ctrlVelX = {
       getAttributeDouble(&paramsXml, {"controls", "velocityX"}, "min"),
       getAttributeDouble(&paramsXml, {"controls", "velocityX"}, "max"),

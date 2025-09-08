@@ -54,7 +54,7 @@ CursorEmulator::CursorEmulator(GraphicsTools::WindowBase *win)
 void CursorEmulator::update() {
   if (active) {
     std::uniform_real_distribution<double> actionDist(0, 1);
-    double tNow = utils::computeTNow();
+    double tNow = simUtils::computeTNow();
     // if finished with current action
     if (tNow > tNextActionEnd) {
       prev = current;
@@ -221,7 +221,7 @@ void CursorEmulator::generateAngularVel() {
 
 void CursorEmulator::createObj() {
   current.action = CreateObject;
-  utils::createObj((GraphicsTools::Window *)_win);
+  simUtils::createObj((GraphicsTools::Window *)_win);
 }
 
 void CursorEmulator::clearEnv() {

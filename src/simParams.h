@@ -19,6 +19,7 @@ struct SimParameters {
   double objFrictionCoeff;
   std::vector<double> ctrlRadius;
   std::vector<double> ctrlElast;
+  std::vector<double> ctrlVelForward;
   std::vector<double> ctrlVelX;
   std::vector<double> ctrlVelY;
   std::vector<double> ctrlVelZ;
@@ -40,6 +41,7 @@ const SimParameters defaultParams = {60,
                                      1e-3,
                                      {10, 100, 1, 30},
                                      {0, 1, 0.01, 1},
+                                     {-100, 100, 5, 0},
                                      {-100, 100, 5, 0},
                                      {-100, 100, 5, 0},
                                      {-100, 100, 5, 0},

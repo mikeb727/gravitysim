@@ -38,6 +38,7 @@ public:
   void setAccel(const Vec3 &v) { _accel = v; };
   void setSelectState(bool state) { _selected = state; };
   void setNetForce(const Vec3 &v) { _fNet = v; }
+  void setNetTorque(const Vec3 &v) { _tNet = v; }
 
   // physics/motion operations
   BBox nextBBox(double dt) const; // object bbox at next time step
@@ -53,7 +54,7 @@ public:
 
 private:
   std::string objType;
-  BBox _bbox;     // object bounding box
+  BBox _bbox;      // object bounding box
   Quaternion _rot; // object rotational orientation
   Vec3 _vel;       // object velocity
   Vec3 _accel;     // object acceleration

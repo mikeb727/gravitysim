@@ -41,6 +41,7 @@ void Environment::moveObjs() {
   for (auto &obj : _objs) {
     if (obj.second.selected()) {
       obj.second.setNetForce(Vec3());
+      obj.second.setNetTorque(Vec3());
     } else {
       // record x and y offsets of object outside the environment
       obj.second.move(
