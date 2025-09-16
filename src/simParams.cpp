@@ -59,6 +59,12 @@ SimParameters parseXmlConfig(std::string fileName) {
       Vec3(getAttributeDouble(&paramsXml, {"environment", "gravity"}, "x"),
            getAttributeDouble(&paramsXml, {"environment", "gravity"}, "y"),
            getAttributeDouble(&paramsXml, {"environment", "gravity"}, "z"));
+  result.envWind =
+      Vec3(getAttributeDouble(&paramsXml, {"environment", "wind"}, "x"),
+           getAttributeDouble(&paramsXml, {"environment", "wind"}, "y"),
+           getAttributeDouble(&paramsXml, {"environment", "wind"}, "z"));
+  result.envAirDensity =
+      getAttributeDouble(&paramsXml, {"environment", "airDensity"}, "value");
   result.envScale =
       getAttributeDouble(&paramsXml, {"environment", "unitsPerMeter"}, "value");
   result.envPauseState =

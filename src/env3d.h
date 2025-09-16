@@ -28,11 +28,17 @@ public:
   const BBox bbox() const { return _bbox; };
   double dt() const { return _dt; };
   const Vec3 &gravity() const { return _g; };
+  const Vec3 &wind() const { return _wind; };
+  const double &airDensity() const { return _airDensity; };
   EnvObjSet &objs() { return _objs; };
   int time() const { return _t; };
 
+  // setters
+  void setWind(Vec3 w) { _wind = w; };
+  void setAirDensity(double d) { _airDensity = d; };
+
   // object operations
-  void addObj(const Ball &obj) { _objs[_nextObjId++] =obj; };
+  void addObj(const Ball &obj) { _objs[_nextObjId++] = obj; };
   void clearObjs() { _objs.clear(); };
   int lastObjId() const { return _nextObjId - 1; };
   void removeObj(int id) { _objs.erase(id); };
@@ -55,8 +61,10 @@ public:
 
 private:
   BBox _bbox; // boundary (dimensions)
-  double _dt;  // time step
-  Vec3 _g;     // gravity vector
+  double _dt; // time step
+  Vec3 _g;    // gravity vector
+  Vec3 _wind;
+  double _airDensity;
   int _nextObjId;
   EnvObjSet _objs; // set of objects
   bool _paused;    // run state (running or paused)

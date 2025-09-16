@@ -47,7 +47,10 @@ Vec3::~Vec3() {}
 
 double Vec3::mag() const { return sqrt(pow(_x, 2) + pow(_y, 2) + pow(_z, 2)); }
 
-Vec3 Vec3::unit() const { return Vec3(_x / mag(), _y / mag(), _z / mag()); }
+Vec3 Vec3::unit() const {
+  return mag() < EQ_TOLERANCE ? Vec3()
+                              : Vec3(_x / mag(), _y / mag(), _z / mag());
+}
 
 Vec3 Vec3::plus(const Vec3 &v) const {
   return Vec3(x() + v.x(), y() + v.y(), z() + v.z());

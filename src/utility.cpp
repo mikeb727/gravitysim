@@ -332,6 +332,15 @@ void setupEnvWalls(GraphicsTools::Window *win) {
   }
 }
 
+void removeEnvObj(GraphicsTools::Window *win, int objId) {
+  if (objId == -1)
+    return;
+  Environment *env = static_cast<Environment *>(win->userPointer("env"));
+  ObjMap *objMap = static_cast<ObjMap *>(win->userPointer("ballObjMap"));
+  env->removeObj(objId);
+  objMap->erase(objId);
+}
+
 void clearEnvObjs(GraphicsTools::Window *win) {
   Environment *env = static_cast<Environment *>(win->userPointer("env"));
   ObjMap *objMap = static_cast<ObjMap *>(win->userPointer("ballObjMap"));
@@ -376,19 +385,19 @@ void setupUserCursors(GraphicsTools::Window *win, UserCursor *uc) {
       &staticObjMap->at(uc->baseRenderObjId + 2));
 
   // small 3D crosshair if no tool is active
-  GraphicsTools::RenderObject userNoneDisplayX;
-  userNoneDisplayX.setShader(phong);
-  staticObjMap->emplace(uc->baseRenderObjId + 3, userNoneDisplayX);
+  GraphicsTools::RenderObject userCrosshairX;
+  userCrosshairX.setShader(phong);
+  staticObjMap->emplace(uc->baseRenderObjId + 3, userCrosshairX);
   win->activeScene()->addRenderObject(
       &staticObjMap->at(uc->baseRenderObjId + 3));
-  GraphicsTools::RenderObject userNoneDisplayY;
-  userNoneDisplayY.setShader(phong);
-  staticObjMap->emplace(uc->baseRenderObjId + 4, userNoneDisplayY);
+  GraphicsTools::RenderObject userCrosshairY;
+  userCrosshairY.setShader(phong);
+  staticObjMap->emplace(uc->baseRenderObjId + 4, userCrosshairY);
   win->activeScene()->addRenderObject(
       &staticObjMap->at(uc->baseRenderObjId + 4));
-  GraphicsTools::RenderObject userNoneDisplayZ;
-  userNoneDisplayZ.setShader(phong);
-  staticObjMap->emplace(uc->baseRenderObjId + 5, userNoneDisplayZ);
+  GraphicsTools::RenderObject userCrosshairZ;
+  userCrosshairZ.setShader(phong);
+  staticObjMap->emplace(uc->baseRenderObjId + 5, userCrosshairZ);
   win->activeScene()->addRenderObject(
       &staticObjMap->at(uc->baseRenderObjId + 5));
 }

@@ -12,6 +12,8 @@
         <!-- boundary dimensions in vis units -->
         <boundary width="25" height="50" depth="150" />
         <gravity x="0" y="-9.8" z="0" />
+        <wind x="0" y="0" z="0" />
+        <airDensity value="0.005" />
     </environment>
     <controls>
         <disableUserInput value="true" />

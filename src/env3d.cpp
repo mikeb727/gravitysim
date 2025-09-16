@@ -43,6 +43,14 @@ void Environment::moveObjs() {
       obj.second.setNetForce(Vec3());
       obj.second.setNetTorque(Vec3());
     } else {
+      Vec3 drag((_wind - obj.second.vel()).unit() * 0.5 * _airDensity *
+                pow((_wind - obj.second.vel()).mag(), 2) *
+                pow(obj.second.bbox().w() * 0.5, 2) * 0.5); // assume 0.5 C_d
+      obj.second.applyForce(drag * simParams.envScale); // air resistance
+      obj.second.applyTorque(pow(obj.second.bbox().w() * 0.5, 2) * -obj.second.aVel() * _airDensity * simParams.envScale);
+      obj.second.applyForce(
+          obj.second.aVel().cross(obj.second.vel().unit() - _wind) *
+          _airDensity * simParams.envScale);
       // record x and y offsets of object outside the environment
       obj.second.move(
           _dt,

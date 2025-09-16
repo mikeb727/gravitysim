@@ -101,8 +101,6 @@ void handleUserInput(GraphicsTools::Window *win) {
     userCursor->rightClickDragDelta =
         Vec3(newX - userCursor->lastRightClick.x(),
              userCursor->lastRightClick.y() - newY);
-    glm::vec4 rightDragDelta = {userCursor->rightClickDragDelta.x(),
-                                userCursor->rightClickDragDelta.y(), 0, 0};
     switch (userCursor->activeTool) {
     case simUtils::Tool::SizeTool:
       (*ctrls)("radius").changeValue(0.001 * userCursor->cursorVel.y());
@@ -111,12 +109,8 @@ void handleUserInput(GraphicsTools::Window *win) {
       // create xy vector from click-drag with z set to zero
       // apply camera rotation matrix
       rotatedVector =
-          glm::rotate(glm::identity<glm::mat4>(), glm::radians(cam->yaw()),
-                      glm::vec3(0.0f, 1.0f, 0.0f)) *
-          glm::rotate(glm::identity<glm::mat4>(), glm::radians(cam->pitch()),
-                      glm::vec3(1.0f, 0.0f, 0.0f)) *
-          glm::vec4(
-              {userCursor->cursorVel.x(), userCursor->cursorVel.y(), 0, 0});
+          cam->viewMatrix() * glm::vec4({userCursor->cursorVel.x(),
+                                         -userCursor->cursorVel.y(), 0, 0});
 
       (*ctrls)("velx").changeValue(0.05 * rotatedVector.x);
       (*ctrls)("vely").changeValue(0.05 * rotatedVector.y);
@@ -125,13 +119,9 @@ void handleUserInput(GraphicsTools::Window *win) {
     case simUtils::Tool::SpinTool:
       // create xy vector from click-drag with z set to zero
       // apply camera rotation matrix
-      rotatedVector =
-          glm::rotate(glm::identity<glm::mat4>(), glm::radians(cam->yaw()),
-                      glm::vec3(0.0f, 1.0f, 0.0f)) *
-          glm::rotate(glm::identity<glm::mat4>(), glm::radians(cam->pitch()),
-                      glm::vec3(1.0f, 0.0f, 0.0f)) *
-          glm::vec4({-userCursor->rightClickDragDelta.y(),
-                     userCursor->rightClickDragDelta.x(), 0, 0});
+      rotatedVector = cam->viewMatrix() *
+                      glm::vec4({-userCursor->rightClickDragDelta.y(),
+                                 userCursor->rightClickDragDelta.x(), 0, 0});
 
       (*ctrls)("vela").setValue(0.1 * glm::length(rotatedVector));
       (*ctrls)("angularAxisX").setValue(0.01 * rotatedVector.x);
@@ -229,8 +219,12 @@ void keyCallback(GLFWwindow *win, int key, int scancode, int action, int mods) {
     }
   }
   if (key == GLFW_KEY_C && action == GLFW_PRESS) {
-    Environment *env = static_cast<Environment*>(mbWin->userPointer("env"));
+    Environment *env = static_cast<Environment *>(mbWin->userPointer("env"));
     simUtils::clearEnvObjs(mbWin);
+  }
+  if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
+    Environment *env = static_cast<Environment *>(mbWin->userPointer("env"));
+    env->togglePause();
   }
 }
 
@@ -264,8 +258,15 @@ void mouseButtonCallback(GLFWwindow *win, int button, int action, int m) {
     double x, y;
     glfwGetCursorPos(win, &x, &y);
     uc->lastRightClick = Vec3(x, y, 0);
-
-
+  }
+  if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE) {
+    Environment *env = (Environment *)mbWin->userPointer("env");
+    Vec3 candidateObjPos(uc->data.ballX, uc->data.ballY, uc->data.ballZ);
+    int objIdAtCandPos = simUtils::objIdAtEnvPos(candidateObjPos, env);
+    if (objIdAtCandPos != -1) {
+      simUtils::removeEnvObj(mbWin, objIdAtCandPos);
+      env->removeObj(objIdAtCandPos);
+    }
   }
   if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
     Environment *env = (Environment *)mbWin->userPointer("env");
@@ -277,6 +278,21 @@ void mouseButtonCallback(GLFWwindow *win, int button, int action, int m) {
       uc->selectedObjId = objIdAtCandPos;
       uc->objSelectionOffset =
           env->objs().at(objIdAtCandPos).bbox().pos() - candidateObjPos;
+    }
+  }
+  if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_RELEASE) {
+    Environment *env = (Environment *)mbWin->userPointer("env");
+    GraphicsTools::Camera *cam =
+        (GraphicsTools::Camera *)mbWin->userPointer("cam");
+
+    Vec3 candidateObjPos(uc->data.ballX, uc->data.ballY, uc->data.ballZ);
+    int objIdAtCandPos = simUtils::objIdAtEnvPos(candidateObjPos, env);
+    if (objIdAtCandPos != -1) {
+      env->objs()
+          .at(objIdAtCandPos)
+          .applyForce(100000 * Vec3(cam->localForward().x,
+                                    cam->localForward().y,
+                                    cam->localForward().z));
     }
   }
   if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
@@ -327,6 +343,9 @@ void mouseButtonCallback(GLFWwindow *win, int button, int action, int m) {
     }
     if (uc->selectedObjId != -1) {
       env->objs().at(uc->selectedObjId).setSelectState(false);
+      // glm::vec4 rotatedVector =
+      //     cam->viewMatrix() *
+      //     glm::vec4({uc->cursorVel.x(), uc->cursorVel.y(), 0, 0});
       glm::vec4 rotatedVector;
       rotatedVector =
           glm::rotate(glm::identity<glm::mat4>(), glm::radians(cam->yaw()),
@@ -368,6 +387,9 @@ int main(int argc, char *argv[]) {
                   simParams.envGravity * simParams.envScale,
                   1.0 / simParams.envFrameRate);
 
+  env.setWind(simParams.envWind);
+  env.setAirDensity(simParams.envAirDensity);
+
   ControlSet ctrlSet;
   simUtils::setupControls(ctrlSet);
 
@@ -403,7 +425,7 @@ int main(int argc, char *argv[]) {
   sc.setupShadows();
 
   window.attachScene(&sc);
-  window.setClearColor({0.2, 0.3, 0.4, 1.0});
+  window.setClearColor({0.2, 0.3, 0.5, 1.0});
 
   Texture checkerboardTex("assets/check.png");
   GraphicsTools::Material checkerboard = {GraphicsTools::Colors::White,

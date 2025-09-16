@@ -26,6 +26,7 @@ public:
   Quaternion rot() const { return _rot; };
   const Vec3 &vel() const { return _vel; };
   const Vec3 &accel() const { return _accel; };
+  const Vec3 &aVel() const { return _aVel; };
   double mass() const { return _m; };
   bool selected() const { return _selected; };
   std::string type() const { return objType; };
@@ -39,6 +40,8 @@ public:
   void setSelectState(bool state) { _selected = state; };
   void setNetForce(const Vec3 &v) { _fNet = v; }
   void setNetTorque(const Vec3 &v) { _tNet = v; }
+  void applyForce(const Vec3 &v) { _fNet += v; };
+  void applyTorque(const Vec3 &v) { _tNet += v; };
 
   // physics/motion operations
   BBox nextBBox(double dt) const; // object bbox at next time step

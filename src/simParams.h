@@ -13,6 +13,8 @@ struct SimParameters {
   bool envPauseState;
   Vec3 envDimensions;
   Vec3 envGravity;
+  Vec3 envWind;
+  double envAirDensity;
   double envScale; // pixels per meter
   double objSpringCoeff;
   double objSpringDamping;
@@ -35,6 +37,8 @@ const SimParameters defaultParams = {60,
                                      false,
                                      Vec3(10, 10, 10),
                                      Vec3(0, -9.8, 0),
+                                     Vec3(0, 0, 0),
+                                     0,
                                      4,
                                      1e6,
                                      1e6,

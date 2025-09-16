@@ -3,8 +3,8 @@
 
 #include "control.h"
 #include "cursor.h"
-#include "vec3d.h"
 #include "env3d.h"
+#include "vec3d.h"
 
 namespace simUtils {
 
@@ -16,15 +16,17 @@ struct UserCursor {
   CursorData data;
   CursorData prev;
   simUtils::Tool activeTool;
-  // position of last on-screen right-click
+  // on-screen position of last right-click
   Vec3 lastRightClick;
-  // difference between on-screen right-click pos and current pos (while dragging)
+  // difference between on-screen right-click pos and current pos (while
+  // dragging)
   Vec3 rightClickDragDelta;
   // approximate on-screen cursor velocity
   Vec3 cursorVel;
-  int baseRenderObjId;
+  int baseRenderObjId; // size tool cursor is treated as base render ID, other
+                       // cursors are offsets
   int selectedObjId = -1;
-  Vec3 objSelectionOffset;
+  Vec3 objSelectionOffset; // prevent ball snapping to cursor center
 };
 
 typedef std::map<int, GraphicsTools::RenderObject> ObjMap;
@@ -33,8 +35,8 @@ Vec3 remapGlfwCursor(Vec3 vec, GraphicsTools::Window *win);
 
 void drawUserCursor(GraphicsTools::Window *win, simUtils::UserCursor *uc);
 void drawCursor(GraphicsTools::Window *win, CursorData cur, int curGfxId);
-void populateSpinRingPoints(float speed, float radius, Vec3 origin, Vec3 axis, float *destArray,
-                             int arraySize);
+void populateSpinRingPoints(float speed, float radius, Vec3 origin, Vec3 axis,
+                            float *destArray, int arraySize);
 
 void drawSim(GraphicsTools::Window *win);
 void setupEnvWalls(GraphicsTools::Window *win);
@@ -51,6 +53,7 @@ double scalarRk4(const double &v, const double &dv, const double &ddv,
 void createObj(GraphicsTools::Window *win);
 // linked object deletion
 void clearEnvObjs(GraphicsTools::Window *win);
+void removeEnvObj(GraphicsTools::Window *win, int objId);
 void setupControls(ControlSet &ctrlSet);
 
 int objIdAtEnvPos(Vec3 pos, Environment *env);
