@@ -30,7 +30,7 @@ void Environment::moveObjs() {
       // colliding)
       if (obj1.first != obj2.first &&
           obj1.second.bbox().distanceFrom(obj2.second.bbox()) <
-              2.0 * simParams.ctrlRadius[1] * simParams.envScale) {
+              2.0 * simParams.controls_radius[1] * simParams.environment_unitsPerMeter) {
         if (obj1.second.collidesWith(_dt, obj2.second)) {
           obj1.second.resolveCollision(obj2.second, _dt);
         }
@@ -46,11 +46,11 @@ void Environment::moveObjs() {
       Vec3 drag((_wind - obj.second.vel()).unit() * 0.5 * _airDensity *
                 pow((_wind - obj.second.vel()).mag(), 2) *
                 pow(obj.second.bbox().w() * 0.5, 2) * 0.5); // assume 0.5 C_d
-      obj.second.applyForce(drag * simParams.envScale); // air resistance
-      obj.second.applyTorque(pow(obj.second.bbox().w() * 0.5, 2) * -obj.second.aVel() * _airDensity * simParams.envScale);
+      obj.second.applyForce(drag * simParams.environment_unitsPerMeter); // air resistance
+      obj.second.applyTorque(pow(obj.second.bbox().w() * 0.5, 2) * -obj.second.aVel() * _airDensity * simParams.environment_unitsPerMeter);
       obj.second.applyForce(
           obj.second.aVel().cross(obj.second.vel().unit() - _wind) *
-          _airDensity * simParams.envScale);
+          _airDensity * simParams.environment_unitsPerMeter);
       // record x and y offsets of object outside the environment
       obj.second.move(
           _dt,

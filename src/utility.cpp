@@ -65,19 +65,19 @@ void createObj(GraphicsTools::Window *win) {
     for (auto &obj : env->objs()) {
       if (obj.second.bbox().intersects(
               BBox(candidateObjPos,
-                   (*ctrls)["radius"] * 2.0 * simParams.envScale))) {
+                   (*ctrls)["radius"] * 2.0 * simParams.environment_unitsPerMeter))) {
         noOverlap = false;
         break;
       }
     }
     if (noOverlap &&
         env->bbox().containsBBox(BBox(
-            candidateObjPos, (*ctrls)["radius"] * 2.0 * simParams.envScale))) {
+            candidateObjPos, (*ctrls)["radius"] * 2.0 * simParams.environment_unitsPerMeter))) {
       env->addObj(Ball(
-          BBox(candidateObjPos, (*ctrls)["radius"] * 2.0 * simParams.envScale),
-          pow((*ctrls)["radius"] * simParams.envScale, 3), candidateObjPos,
+          BBox(candidateObjPos, (*ctrls)["radius"] * 2.0 * simParams.environment_unitsPerMeter),
+          pow((*ctrls)["radius"] * simParams.environment_unitsPerMeter, 3), candidateObjPos,
           Vec3((*ctrls)["velx"], (*ctrls)["vely"], (*ctrls)["velz"]) *
-              simParams.envScale,
+              simParams.environment_unitsPerMeter,
           1, Vec3()));
       GraphicsTools::Material mat = {GraphicsTools::randomColor(), NULL,
                                      0.5 * GraphicsTools::Colors::White, 4};
@@ -85,7 +85,7 @@ void createObj(GraphicsTools::Window *win) {
       om->at(env->lastObjId()).setShader(shader);
       om->at(env->lastObjId()).setMaterial(mat);
       om->at(env->lastObjId())
-          .genSphere((*ctrls)["radius"] * simParams.envScale, 16, 16);
+          .genSphere((*ctrls)["radius"] * simParams.environment_unitsPerMeter, 16, 16);
       om->at(env->lastObjId())
           .setPos(glm::vec3(candidateObjPos.x(), candidateObjPos.y(),
                             candidateObjPos.z()));
@@ -145,7 +145,7 @@ void drawUserCursor(GraphicsTools::Window *win, simUtils::UserCursor *uc,
 
   switch (uc->activeTool) {
   case simUtils::Tool::SizeTool:
-    staticObjs->at(ballId).genSphere(cur.radius * simParams.envScale * 0.9, 16,
+    staticObjs->at(ballId).genSphere(cur.radius * simParams.environment_unitsPerMeter * 0.9, 16,
                                      16);
     staticObjs->at(ballId).setPos(glm::vec3(cur.ballX, cur.ballY, cur.ballZ));
     break;
@@ -177,7 +177,7 @@ void drawCursor(GraphicsTools::Window *win, CursorData cur, int curGfxId) {
   staticObjs->at(arrowId).clearGeometry();
   staticObjs->at(spinId).clearGeometry();
 
-  staticObjs->at(ballId).genSphere(cur.radius * simParams.envScale * 0.5, 16,
+  staticObjs->at(ballId).genSphere(cur.radius * simParams.environment_unitsPerMeter * 0.5, 16,
                                    16);
   staticObjs->at(ballId).setPos(glm::vec3(cur.ballX, cur.ballY, cur.ballZ));
 
@@ -241,7 +241,7 @@ void drawSim(GraphicsTools::Window *win) {
       win, uc,
       insideEnv && cubeOverlapAtEnvPos(
                        Vec3(uc->data.ballX, uc->data.ballY, uc->data.ballZ),
-                       env, (*ctrls)["radius"] * 2.0 * simParams.envScale),
+                       env, (*ctrls)["radius"] * 2.0 * simParams.environment_unitsPerMeter),
       objIdAtCursor);
   simUtils::drawCursor(win, cursorEmu->current,
                        *(int *)(win->userPointer("cursorEmuObjId")));
@@ -404,33 +404,33 @@ void setupUserCursors(GraphicsTools::Window *win, UserCursor *uc) {
 
 void setupControls(ControlSet &ctrlSet) {
   ctrlSet.addCtrl("radius",
-                  Control("Radius", simParams.ctrlRadius[0],
-                          simParams.ctrlRadius[1], simParams.ctrlRadius[2],
-                          simParams.ctrlRadius[3]));
+                  Control("Radius", simParams.controls_radius[0],
+                          simParams.controls_radius[1], simParams.controls_radius[2],
+                          simParams.controls_radius[3]));
   ctrlSet.addCtrl("velForward",
-                  Control("Forward velocity", simParams.ctrlVelForward[0],
-                          simParams.ctrlVelForward[1],
-                          simParams.ctrlVelForward[2],
-                          simParams.ctrlVelForward[3]));
-  ctrlSet.addCtrl("velx", Control("X velocity", simParams.ctrlVelX[0],
-                                  simParams.ctrlVelX[1], simParams.ctrlVelX[2],
-                                  simParams.ctrlVelX[3]));
-  ctrlSet.addCtrl("vely", Control("Y velocity", simParams.ctrlVelY[0],
-                                  simParams.ctrlVelY[1], simParams.ctrlVelY[2],
-                                  simParams.ctrlVelY[3]));
-  ctrlSet.addCtrl("velz", Control("Z velocity", simParams.ctrlVelZ[0],
-                                  simParams.ctrlVelZ[1], simParams.ctrlVelZ[2],
-                                  simParams.ctrlVelZ[3]));
+                  Control("Forward velocity", simParams.controls_velocityForward[0],
+                          simParams.controls_velocityForward[1],
+                          simParams.controls_velocityForward[2],
+                          simParams.controls_velocityForward[3]));
+  ctrlSet.addCtrl("velx", Control("X velocity", simParams.controls_velocityX[0],
+                                  simParams.controls_velocityX[1], simParams.controls_velocityX[2],
+                                  simParams.controls_velocityX[3]));
+  ctrlSet.addCtrl("vely", Control("Y velocity", simParams.controls_velocityY[0],
+                                  simParams.controls_velocityY[1], simParams.controls_velocityY[2],
+                                  simParams.controls_velocityY[3]));
+  ctrlSet.addCtrl("velz", Control("Z velocity", simParams.controls_velocityZ[0],
+                                  simParams.controls_velocityZ[1], simParams.controls_velocityZ[2],
+                                  simParams.controls_velocityZ[3]));
   ctrlSet.addCtrl(
-      "vela", Control("Angular velocity", simParams.ctrlVelAngular[0],
-                      simParams.ctrlVelAngular[1], simParams.ctrlVelAngular[2],
-                      simParams.ctrlVelAngular[3]));
+      "vela", Control("Angular velocity", simParams.controls_velocityAngular[0],
+                      simParams.controls_velocityAngular[1], simParams.controls_velocityAngular[2],
+                      simParams.controls_velocityAngular[3]));
   ctrlSet.addCtrl("angularAxisX", Control("Angular axis X", -4, 4, 0.01,
-                                          simParams.ctrlAngularAxis[0]));
+                                          simParams.controls_angularAxis.x()));
   ctrlSet.addCtrl("angularAxisY", Control("Angular axis Y", -4, 4, 0.01,
-                                          simParams.ctrlAngularAxis[1]));
+                                          simParams.controls_angularAxis.y()));
   ctrlSet.addCtrl("angularAxisZ", Control("Angular axis Z", -4, 4, 0.01,
-                                          simParams.ctrlAngularAxis[2]));
+                                          simParams.controls_angularAxis.z()));
 }
 
 int objIdAtEnvPos(Vec3 pos, Environment *env) {

@@ -1,4 +1,4 @@
-/* Three-dimensional bouncing ball simulator playground*/
+/* Three-dimensional bouncing ball simulator playground */
 
 #include <argparse/argparse.hpp>
 #include <chrono>
@@ -10,6 +10,7 @@
 #include "control.h"
 #include "cursor.h"
 #include "env3d.h"
+#include "simParams.h"
 #include "utility.h"
 
 // switch for compile-time vs runtime shaders
@@ -280,7 +281,7 @@ void mouseButtonCallback(GLFWwindow *win, int button, int action, int m) {
           env->objs().at(objIdAtCandPos).bbox().pos() - candidateObjPos;
     }
   }
-  if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_RELEASE) {
+  if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
     Environment *env = (Environment *)mbWin->userPointer("env");
     GraphicsTools::Camera *cam =
         (GraphicsTools::Camera *)mbWin->userPointer("cam");
@@ -295,7 +296,7 @@ void mouseButtonCallback(GLFWwindow *win, int button, int action, int m) {
                                     cam->localForward().z));
     }
   }
-  if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
+  if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_RELEASE) {
     Environment *env = (Environment *)mbWin->userPointer("env");
     ControlSet *ctrls =
         static_cast<ControlSet *>(mbWin->userPointer("ctrlSet"));
@@ -319,13 +320,13 @@ void mouseButtonCallback(GLFWwindow *win, int button, int action, int m) {
     // no object at cursor
     if (simUtils::cubeOverlapAtEnvPos(candidateObjPos, env,
                                       (*ctrls)["radius"] * 2.0 *
-                                          simParams.envScale) &&
+                                          simParams.environment_unitsPerMeter) &&
         env->bbox().containsBBox(BBox(
-            candidateObjPos, (*ctrls)["radius"] * 2.0 * simParams.envScale))) {
+            candidateObjPos, (*ctrls)["radius"] * 2.0 * simParams.environment_unitsPerMeter))) {
       env->addObj(Ball(
-          BBox(candidateObjPos, (*ctrls)["radius"] * 2.0 * simParams.envScale),
-          pow((*ctrls)["radius"] * simParams.envScale, 3), candidateObjPos,
-          candidateObjVel * simParams.envScale, 1,
+          BBox(candidateObjPos, (*ctrls)["radius"] * 2.0 * simParams.environment_unitsPerMeter),
+          pow((*ctrls)["radius"] * simParams.environment_unitsPerMeter, 3), candidateObjPos,
+          candidateObjVel * simParams.environment_unitsPerMeter, 1,
           (*ctrls)["vela"] * Vec3((*ctrls)["angularAxisX"],
                                   (*ctrls)["angularAxisY"],
                                   (*ctrls)["angularAxisZ"])));
@@ -335,7 +336,7 @@ void mouseButtonCallback(GLFWwindow *win, int button, int action, int m) {
       objMap->at(env->lastObjId()).setShader(shader);
       objMap->at(env->lastObjId()).setMaterial(mat);
       objMap->at(env->lastObjId())
-          .genSphere((*ctrls)["radius"] * simParams.envScale, 16, 16);
+          .genSphere((*ctrls)["radius"] * simParams.environment_unitsPerMeter, 16, 16);
       objMap->at(env->lastObjId())
           .setPos(glm::vec3(candidateObjPos.x(), candidateObjPos.y(),
                             candidateObjPos.z()));
@@ -382,21 +383,21 @@ int main(int argc, char *argv[]) {
   argParser.parse_args(argc, argv);
   simParams = parseXmlConfig(argParser.get<std::string>("--config"));
 
-  Environment env(simParams.envDimensions.x(), simParams.envDimensions.y(),
-                  simParams.envDimensions.z(),
-                  simParams.envGravity * simParams.envScale,
-                  1.0 / simParams.envFrameRate);
+  Environment env(simParams.environment_boundary.x(), simParams.environment_boundary.y(),
+                  simParams.environment_boundary.z(),
+                  simParams.environment_gravity * simParams.environment_unitsPerMeter,
+                  1.0 / simParams.environment_frameRate);
 
-  env.setWind(simParams.envWind);
-  env.setAirDensity(simParams.envAirDensity);
+  env.setWind(simParams.environment_wind);
+  env.setAirDensity(simParams.environment_airDensity);
 
   ControlSet ctrlSet;
   simUtils::setupControls(ctrlSet);
 
   GraphicsTools::InitGraphics();
   GraphicsTools::Window window("Gravity Sim 3D!",
-                               simParams.windowDimensions.x(),
-                               simParams.windowDimensions.y());
+                               simParams.visualization_dimensions.x(),
+                               simParams.visualization_dimensions.y());
 
 #ifdef COMPILE_TIME_SHADERS
   GraphicsTools::ShaderProgram phong(phongVs, phongFs, true);
@@ -499,12 +500,12 @@ int main(int argc, char *argv[]) {
   while (!window.shouldClose()) {
     double tNow = simUtils::computeTNow();
 
-    if ((tNow - tLastEnv) / 1000.0 > (1.0 / simParams.envFrameRate)) {
+    if ((tNow - tLastEnv) / 1000.0 > (1.0 / simParams.environment_frameRate)) {
       env.update();
       tLastEnv = tNow;
 
       // only update window at framerate
-      if ((tNow - tLastWindow) / 1000.0 > (1.0 / simParams.windowFrameRate)) {
+      if ((tNow - tLastWindow) / 1000.0 > (1.0 / simParams.visualization_frameRate)) {
         cursorEmu.update();
         handleUserInput(&window);
         handleKeyStates(&window);

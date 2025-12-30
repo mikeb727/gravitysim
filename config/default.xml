@@ -1,0 +1,36 @@
+<!-- use SI units here unless otherwise specified! -->
+<gravitysim>
+    <visualization>
+        <frameRate value="60" />
+        <dimensions width="1024" height="768" />
+    </visualization>
+    <environment>
+        <frameRate value="500" />
+        <!-- convert visualization intrinsic scale to SI -->
+        <unitsPerMeter value="4" />
+        <paused type="bool" value="false" />
+        <!-- boundary dimensions in vis units -->
+        <boundary width="25" height="50" depth="150" />
+        <gravity x="0" y="-9.8" z="0" />
+        <wind x="0" y="0" z="0" />
+        <airDensity value="0.005" />
+    </environment>
+    <controls>
+        <disableUserInput type="bool" value="true" />
+        <fullscreenMode type="bool" value="true" />
+        <radius min="0.2" max="0.5" increment="1e-2" default="0.3" />
+        <!-- straight-on velocity (outward from camera)-->
+        <velocityForward min="-30" max="30" increment="0.05" default="0" />
+        <!-- skew velocity (combine with straight-on for total velocity) -->
+        <velocityX min="-30" max="30" increment="0.05" default="0" />
+        <velocityY min="-30" max="30" increment="0.05" default="0" />
+        <velocityZ min="-30" max="30" increment="0.05" default="0" />
+        <velocityAngular min="-100" max="100" increment="0.5" default="0" />
+        <angularAxis x="1" y="0" z="0" />
+    </controls>
+    <tuning>
+        <objSpringCoeff value="1e4" />
+        <objSpringDamping value="1e1" />
+        <objFrictionCoeff value="2.5e-2" />
+    </tuning>
+</gravitysim>
