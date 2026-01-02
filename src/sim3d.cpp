@@ -59,33 +59,33 @@ void handleUserInput(GraphicsTools::Window *win) {
   // camera movement
   if (cam) {
     float panSpeed = glfwGetKey(glfwWin, GLFW_KEY_LEFT_SHIFT) ? 1.0 : 0.5f;
-    // zoom
-    if (cam->projection() == GraphicsTools::CameraProjType::Perspective) {
-      if (glfwGetKey(glfwWin, GLFW_KEY_Z)) {
-        cam->setPerspective(std::clamp(cam->fov() - 0.5f, 5.0f, 60.0f),
-                            cam->aspectRatio());
-      } else if (glfwGetKey(glfwWin, GLFW_KEY_X)) {
-        cam->setPerspective(std::clamp(cam->fov() + 0.5f, 5.0f, 60.0f),
-                            cam->aspectRatio());
-      }
-    }
     // up, down
-    if (glfwGetKey(glfwWin, GLFW_KEY_Q)) {
+    if (glfwGetKey(glfwWin, simParams.input_up)) {
       cam->setPos(cam->pos() + panSpeed * cam->localUp());
-    } else if (glfwGetKey(glfwWin, GLFW_KEY_E)) {
+    } else if (glfwGetKey(glfwWin, simParams.input_down)) {
       cam->setPos(cam->pos() - panSpeed * cam->localUp());
     }
     // left, right
-    if (glfwGetKey(glfwWin, GLFW_KEY_D)) {
+    if (glfwGetKey(glfwWin, simParams.input_right)) {
       cam->setPos(cam->pos() + panSpeed * cam->localRight());
-    } else if (glfwGetKey(glfwWin, GLFW_KEY_A)) {
+    } else if (glfwGetKey(glfwWin, simParams.input_left)) {
       cam->setPos(cam->pos() - panSpeed * cam->localRight());
     }
     // forward, backward
-    if (glfwGetKey(glfwWin, GLFW_KEY_W)) {
+    if (glfwGetKey(glfwWin, simParams.input_forward)) {
       cam->setPos(cam->pos() + panSpeed * cam->localForward());
-    } else if (glfwGetKey(glfwWin, GLFW_KEY_S)) {
+    } else if (glfwGetKey(glfwWin, simParams.input_backward)) {
       cam->setPos(cam->pos() - panSpeed * cam->localForward());
+    }
+    // zoom
+    if (cam->projection() == GraphicsTools::CameraProjType::Perspective) {
+      if (glfwGetKey(glfwWin, simParams.input_zoomIn)) {
+        cam->setPerspective(std::clamp(cam->fov() - 0.5f, 5.0f, 60.0f),
+                            cam->aspectRatio());
+      } else if (glfwGetKey(glfwWin, simParams.input_zoomOut)) {
+        cam->setPerspective(std::clamp(cam->fov() + 0.5f, 5.0f, 60.0f),
+                            cam->aspectRatio());
+      }
     }
   }
 
@@ -154,18 +154,66 @@ void handleUserInput(GraphicsTools::Window *win) {
   userCursor->prev.ballY = newY;
 
   // we just changed camera position, so update user's cursor
+  if (userCursor->activeTool != simUtils::Tool::None){
+    userCursor->forwardObjId = -1;
+    userCursor->closestForwardDistance = 10.0;
+  }
 
-  userCursor->data.ballX = cam->pos().x + 10.0 * cam->localForward().x;
-  userCursor->data.ballY = cam->pos().y + 10.0 * cam->localForward().y;
-  userCursor->data.ballZ = cam->pos().z + 10.0 * cam->localForward().z;
+  Vec3 baseCursorPos = simUtils::glmToVec3(cam->pos()) +
+                       userCursor->closestForwardDistance *
+                           simUtils::glmToVec3(cam->localForward());
+
+  // locate the cursor
+  // find the closest ball directly in front of the camera
+  // and snap the cursor to it
+  if (userCursor->activeTool == simUtils::Tool::None && userCursor->selectedObjId == -1) {
+    double maxDistance = 50.0;
+    userCursor->forwardObjId = -1;
+    for (auto &obj : env->objs()) {
+      double dotProductTest =
+          simUtils::glmToVec3(cam->localForward())
+              .unit()
+              .dot((obj.second.bbox().pos() - simUtils::glmToVec3(cam->pos()))
+                       .unit());
+      double lineSphereTest =
+          std::pow(simUtils::glmToVec3(cam->localForward())
+                       .unit()
+                       .dot(simUtils::glmToVec3(cam->pos()) -
+                            obj.second.bbox().pos()),
+                   2) -
+          std::pow(
+              Vec3((simUtils::glmToVec3(cam->pos())) - obj.second.bbox().pos())
+                  .mag(),
+              2) +
+          std::pow(obj.second.bbox().w() * 0.5, 2);
+      double dist =
+          (obj.second.bbox().pos() - simUtils::glmToVec3(cam->pos())).mag();
+      if (lineSphereTest > -3 && dotProductTest > 0 && dist < maxDistance) {
+        maxDistance = dist;
+        userCursor->closestForwardDistance = dist;
+        userCursor->forwardObjId = obj.first;
+      }
+    }
+
+    if ((userCursor->forwardObjId == -1 && userCursor->selectedObjId == -1)) {
+      userCursor->closestForwardDistance = 10.0;
+    }
+
+    if ((userCursor->selectedObjId == -1 && userCursor->forwardObjId != -1)) {
+      baseCursorPos = env->objs().at(userCursor->forwardObjId).bbox().pos();
+    }
+  }
+  userCursor->data.ballX = baseCursorPos.x();
+  userCursor->data.ballY = baseCursorPos.y();
+  userCursor->data.ballZ = baseCursorPos.z();
   userCursor->data.arrowX =
-      cam->pos().x + (0.2 * (*ctrls)["velx"] * (*ctrls)["velForward"]) +
+      baseCursorPos.x() + (0.2 * (*ctrls)["velx"] * (*ctrls)["velForward"]) +
       (10.0 + 2.0 * ((*ctrls)["velForward"])) * cam->localForward().x;
   userCursor->data.arrowY =
-      cam->pos().y + (0.2 * (*ctrls)["vely"] * (*ctrls)["velForward"]) +
+      baseCursorPos.y() + (0.2 * (*ctrls)["vely"] * (*ctrls)["velForward"]) +
       (10.0 + 2.0 * ((*ctrls)["velForward"])) * cam->localForward().y;
   userCursor->data.arrowZ =
-      cam->pos().z + (0.2 * (*ctrls)["velz"] * (*ctrls)["velForward"]) +
+      baseCursorPos.z() + (0.2 * (*ctrls)["velz"] * (*ctrls)["velForward"]) +
       (10.0 + 2.0 * ((*ctrls)["velForward"])) * cam->localForward().z;
   userCursor->data.deltaX = userCursor->data.arrowX - userCursor->data.ballX;
   userCursor->data.deltaY = userCursor->data.arrowY - userCursor->data.ballY;
@@ -185,22 +233,27 @@ void keyCallback(GLFWwindow *win, int key, int scancode, int action, int mods) {
       (simUtils::UserCursor *)(mbWin->userPointer("userCursor"));
   ControlSet *ctrls = static_cast<ControlSet *>(mbWin->userPointer("ctrlSet"));
 
-  if (key == GLFW_KEY_1 && action == GLFW_PRESS) {
+  if (key == simParams.input_sizeTool && action == GLFW_PRESS) {
     uc->activeTool = uc->activeTool == simUtils::Tool::SizeTool
                          ? simUtils::Tool::None
                          : simUtils::Tool::SizeTool;
   }
-  if (key == GLFW_KEY_2 && action == GLFW_PRESS) {
+  if (key == simParams.input_speedTool && action == GLFW_PRESS) {
     uc->activeTool = uc->activeTool == simUtils::Tool::SpeedTool
                          ? simUtils::Tool::None
                          : simUtils::Tool::SpeedTool;
   }
-  if (key == GLFW_KEY_3 && action == GLFW_PRESS) {
+  if (key == simParams.input_spinTool && action == GLFW_PRESS) {
     uc->activeTool = uc->activeTool == simUtils::Tool::SpinTool
                          ? simUtils::Tool::None
                          : simUtils::Tool::SpinTool;
   }
-  if (key == GLFW_KEY_R && action == GLFW_PRESS) {
+  if (key == simParams.input_pushTool && action == GLFW_PRESS) {
+    uc->activeTool = uc->activeTool == simUtils::Tool::PushTool
+                         ? simUtils::Tool::None
+                         : simUtils::Tool::PushTool;
+  }
+  if (key == simParams.input_toolReset && action == GLFW_PRESS) {
     switch (uc->activeTool) {
     case simUtils::Tool::SizeTool:
       (*ctrls)("radius").reset();
@@ -216,14 +269,16 @@ void keyCallback(GLFWwindow *win, int key, int scancode, int action, int mods) {
       break;
     case simUtils::Tool::None:
     default:
-      std::cerr << "note: no active tool to reset\n";
+      std::cerr << "note: no active tool to reset, or tool does not support "
+                   "reset\n";
     }
   }
-  if (key == GLFW_KEY_C && action == GLFW_PRESS) {
+  if (key == simParams.input_clearEnv && action == GLFW_PRESS) {
     Environment *env = static_cast<Environment *>(mbWin->userPointer("env"));
     simUtils::clearEnvObjs(mbWin);
+    uc->selectedObjId = -1;
   }
-  if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
+  if (key == simParams.input_pause && action == GLFW_PRESS) {
     Environment *env = static_cast<Environment *>(mbWin->userPointer("env"));
     env->togglePause();
   }
@@ -275,28 +330,15 @@ void mouseButtonCallback(GLFWwindow *win, int button, int action, int m) {
 
     int objIdAtCandPos = simUtils::objIdAtEnvPos(candidateObjPos, env);
     if (objIdAtCandPos != -1) {
-      env->objs().at(objIdAtCandPos).setSelectState(true);
-      uc->selectedObjId = objIdAtCandPos;
-      uc->objSelectionOffset =
-          env->objs().at(objIdAtCandPos).bbox().pos() - candidateObjPos;
+      if (uc->activeTool != simUtils::Tool::PushTool) {
+        env->objs().at(objIdAtCandPos).setSelectState(true);
+        uc->selectedObjId = objIdAtCandPos;
+        uc->objSelectionOffset =
+            env->objs().at(objIdAtCandPos).bbox().pos() - candidateObjPos;
+      }
     }
   }
   if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
-    Environment *env = (Environment *)mbWin->userPointer("env");
-    GraphicsTools::Camera *cam =
-        (GraphicsTools::Camera *)mbWin->userPointer("cam");
-
-    Vec3 candidateObjPos(uc->data.ballX, uc->data.ballY, uc->data.ballZ);
-    int objIdAtCandPos = simUtils::objIdAtEnvPos(candidateObjPos, env);
-    if (objIdAtCandPos != -1) {
-      env->objs()
-          .at(objIdAtCandPos)
-          .applyForce(100000 * Vec3(cam->localForward().x,
-                                    cam->localForward().y,
-                                    cam->localForward().z));
-    }
-  }
-  if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_RELEASE) {
     Environment *env = (Environment *)mbWin->userPointer("env");
     ControlSet *ctrls =
         static_cast<ControlSet *>(mbWin->userPointer("ctrlSet"));
@@ -317,30 +359,46 @@ void mouseButtonCallback(GLFWwindow *win, int button, int action, int m) {
         (*ctrls)["vely"] + (*ctrls)["velForward"] * cam->localForward().y,
         (*ctrls)["velz"] + (*ctrls)["velForward"] * cam->localForward().z);
 
-    // no object at cursor
-    if (simUtils::cubeOverlapAtEnvPos(candidateObjPos, env,
-                                      (*ctrls)["radius"] * 2.0 *
-                                          simParams.environment_unitsPerMeter) &&
-        env->bbox().containsBBox(BBox(
-            candidateObjPos, (*ctrls)["radius"] * 2.0 * simParams.environment_unitsPerMeter))) {
-      env->addObj(Ball(
-          BBox(candidateObjPos, (*ctrls)["radius"] * 2.0 * simParams.environment_unitsPerMeter),
-          pow((*ctrls)["radius"] * simParams.environment_unitsPerMeter, 3), candidateObjPos,
-          candidateObjVel * simParams.environment_unitsPerMeter, 1,
-          (*ctrls)["vela"] * Vec3((*ctrls)["angularAxisX"],
-                                  (*ctrls)["angularAxisY"],
-                                  (*ctrls)["angularAxisZ"])));
-      GraphicsTools::Material mat = {GraphicsTools::randomColor(), NULL,
-                                     0.5 * GraphicsTools::Colors::White, 4};
-      objMap->emplace(env->lastObjId(), GraphicsTools::RenderObject());
-      objMap->at(env->lastObjId()).setShader(shader);
-      objMap->at(env->lastObjId()).setMaterial(mat);
-      objMap->at(env->lastObjId())
-          .genSphere((*ctrls)["radius"] * simParams.environment_unitsPerMeter, 16, 16);
-      objMap->at(env->lastObjId())
-          .setPos(glm::vec3(candidateObjPos.x(), candidateObjPos.y(),
-                            candidateObjPos.z()));
-      mbWin->activeScene()->addRenderObject(&objMap->at(env->lastObjId()));
+    if (uc->activeTool == simUtils::Tool::PushTool) {
+
+      int objIdAtCandPos = simUtils::objIdAtEnvPos(candidateObjPos, env);
+      if (objIdAtCandPos != -1) {
+        env->objs()
+            .at(objIdAtCandPos)
+            .applyForce(100000 * Vec3(cam->localForward().x,
+                                      cam->localForward().y,
+                                      cam->localForward().z));
+      }
+    } else {
+      // no object at cursor
+      if (uc->selectedObjId == -1 && simUtils::cubeOverlapAtEnvPos(
+              candidateObjPos, env,
+              (*ctrls)["radius"] * 2.0 * simParams.environment_unitsPerMeter) &&
+          env->bbox().containsBBox(
+              BBox(candidateObjPos, (*ctrls)["radius"] * 2.0 *
+                                        simParams.environment_unitsPerMeter))) {
+        env->addObj(Ball(
+            BBox(candidateObjPos, (*ctrls)["radius"] * 2.0 *
+                                      simParams.environment_unitsPerMeter),
+            pow((*ctrls)["radius"] * simParams.environment_unitsPerMeter, 3),
+            candidateObjPos,
+            candidateObjVel * simParams.environment_unitsPerMeter, 1,
+            (*ctrls)["vela"] * Vec3((*ctrls)["angularAxisX"],
+                                    (*ctrls)["angularAxisY"],
+                                    (*ctrls)["angularAxisZ"])));
+        GraphicsTools::Material mat = {GraphicsTools::randomColor(), NULL,
+                                       0.5 * GraphicsTools::Colors::White, 4};
+        objMap->emplace(env->lastObjId(), GraphicsTools::RenderObject());
+        objMap->at(env->lastObjId()).setShader(shader);
+        objMap->at(env->lastObjId()).setMaterial(mat);
+        objMap->at(env->lastObjId())
+            .genSphere((*ctrls)["radius"] * simParams.environment_unitsPerMeter,
+                       16, 16);
+        objMap->at(env->lastObjId())
+            .setPos(glm::vec3(candidateObjPos.x(), candidateObjPos.y(),
+                              candidateObjPos.z()));
+        mbWin->activeScene()->addRenderObject(&objMap->at(env->lastObjId()));
+      }
     }
     if (uc->selectedObjId != -1) {
       env->objs().at(uc->selectedObjId).setSelectState(false);
@@ -383,10 +441,11 @@ int main(int argc, char *argv[]) {
   argParser.parse_args(argc, argv);
   simParams = parseXmlConfig(argParser.get<std::string>("--config"));
 
-  Environment env(simParams.environment_boundary.x(), simParams.environment_boundary.y(),
-                  simParams.environment_boundary.z(),
-                  simParams.environment_gravity * simParams.environment_unitsPerMeter,
-                  1.0 / simParams.environment_frameRate);
+  Environment env(
+      simParams.environment_boundary.x(), simParams.environment_boundary.y(),
+      simParams.environment_boundary.z(),
+      simParams.environment_gravity * simParams.environment_unitsPerMeter,
+      1.0 / simParams.environment_frameRate);
 
   env.setWind(simParams.environment_wind);
   env.setAirDensity(simParams.environment_airDensity);
@@ -505,7 +564,8 @@ int main(int argc, char *argv[]) {
       tLastEnv = tNow;
 
       // only update window at framerate
-      if ((tNow - tLastWindow) / 1000.0 > (1.0 / simParams.visualization_frameRate)) {
+      if ((tNow - tLastWindow) / 1000.0 >
+          (1.0 / simParams.visualization_frameRate)) {
         cursorEmu.update();
         handleUserInput(&window);
         handleKeyStates(&window);

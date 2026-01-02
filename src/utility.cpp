@@ -132,7 +132,7 @@ void drawUserCursor(GraphicsTools::Window *win, simUtils::UserCursor *uc,
       .setMaterial(insideEnv ? cursorMat : cursorMatOutside);
   CursorData cur = uc->data;
 
-  float crosshairHalfLength = (objIdAtCursor != -1) ? 1.8 : 0.3;
+  float crosshairHalfLength = (objIdAtCursor != -1 || uc->forwardObjId != -1) ? 1.8 : 0.3;
   staticObjs->at(crosshairIdX)
       .genLine(0.15, 20, cur.ballX - crosshairHalfLength, cur.ballY, cur.ballZ,
                cur.ballX + crosshairHalfLength, cur.ballY, cur.ballZ);
@@ -161,7 +161,6 @@ void drawUserCursor(GraphicsTools::Window *win, simUtils::UserCursor *uc,
                            cur.angularAxis, spinRingPoints, 30);
     staticObjs->at(spinId).genMultiArrow(fmin(1, fabs(cur.angularSpeed / 25)),
                                          20, 10, spinRingPoints);
-
     break;
   }
 }
@@ -450,6 +449,10 @@ bool cubeOverlapAtEnvPos(Vec3 pos, Environment *env, float radius) {
     }
   }
   return true;
+}
+
+Vec3 glmToVec3(glm::vec3 v){
+  return Vec3(v.x, v.y, v.z);
 }
 
 } // namespace simUtils

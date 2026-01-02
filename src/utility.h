@@ -9,7 +9,7 @@
 namespace simUtils {
 
 // cursor tools for changing created ball size, speed, and spin angle/speed
-enum class Tool { None = 0, SizeTool = 1, SpeedTool = 2, SpinTool = 3 };
+enum class Tool { None = 0, SizeTool = 1, SpeedTool = 2, SpinTool = 3, PushTool = 4};
 
 // cursor data and visibility for now
 struct UserCursor {
@@ -26,6 +26,8 @@ struct UserCursor {
   int baseRenderObjId; // size tool cursor is treated as base render ID, other
                        // cursors are offsets
   int selectedObjId = -1;
+  int forwardObjId = -1; // ID of object directly in front of camera
+  double closestForwardDistance = 10.0;
   Vec3 objSelectionOffset; // prevent ball snapping to cursor center
 };
 
@@ -58,6 +60,8 @@ void setupControls(ControlSet &ctrlSet);
 
 int objIdAtEnvPos(Vec3 pos, Environment *env);
 bool cubeOverlapAtEnvPos(Vec3 pos, Environment *env, float radius);
+
+Vec3 glmToVec3(glm::vec3 v);
 
 } // namespace simUtils
 

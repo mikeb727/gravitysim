@@ -18,26 +18,29 @@ def parseParam(groupNode, paramNode):
 
     if all(a in paramNode.keys() for a in ('min', 'max', 'increment', 'default')):
         dataType = 'std::vector<double>'
+        attr_dataType = 'double'
         default_stmt = f'{{{paramNode.attrib.get('min')}, {param.attrib.get('max')}, {param.attrib.get('increment')}, {param.attrib.get('default')}}}'
         attrList = ('min', 'max', 'increment', 'default')
-        getattr_stmt += '{' + ','.join([rval_template.format(d=('Bool' if dataType == 'bool' else 'Double'), g=groupNode.tag, p=paramNode.tag, a=attr) for attr in attrList]) + '}'
+        getattr_stmt += '{' + ','.join([rval_template.format(d=attr_dataType.capitalize(), g=groupNode.tag, p=paramNode.tag, a=attr) for attr in attrList]) + '}'
     elif all(a in paramNode.keys() for a in ('x', 'y', 'z')):
         dataType = 'Vec3'
+        attr_dataType = 'double'
         default_stmt = f'Vec3({paramNode.attrib.get('x')}, {param.attrib.get('y')}, {param.attrib.get('z')})'
         attrList = ('x', 'y', 'z')
-        getattr_stmt += 'Vec3(' + ','.join([rval_template.format(d=('Bool' if dataType == 'bool' else 'Double'), g=groupNode.tag, p=paramNode.tag, a=attr) for attr in attrList]) + ')'
+        getattr_stmt += 'Vec3(' + ','.join([rval_template.format(d=attr_dataType.capitalize(), g=groupNode.tag, p=paramNode.tag, a=attr) for attr in attrList]) + ')'
     elif all(a in paramNode.keys() for a in ('width', 'height')):
         dataType = 'Vec3'
+        attr_dataType = 'double'
         attrList = ('width', 'height')
         if paramNode.attrib.get('depth'):
             attrList += ('depth',)
         default_stmt = f'Vec3({','.join([param.attrib.get(x) for x in attrList])})'
-        getattr_stmt += 'Vec3(' + ','.join([rval_template.format(d=('Bool' if dataType == 'bool' else 'Double'), g=groupNode.tag, p=paramNode.tag, a=attr) for attr in attrList]) + ')'
+        getattr_stmt += 'Vec3(' + ','.join([rval_template.format(d=attr_dataType.capitalize(), g=groupNode.tag, p=paramNode.tag, a=attr) for attr in attrList]) + ')'
     elif paramNode.attrib.get('type'):
         dataType = paramNode.attrib.get('type')
-        getattr_stmt += rval_template.format(d=('Bool' if dataType == 'bool' else 'Double'), g=groupNode.tag, p=paramNode.tag, a='value')
+        getattr_stmt += rval_template.format(d=dataType.capitalize(), g=groupNode.tag, p=paramNode.tag, a='value')
     else:
-        getattr_stmt += rval_template.format(d=('Bool' if dataType == 'bool' else 'Double'), g=groupNode.tag, p=paramNode.tag, a='value')
+        getattr_stmt += rval_template.format(d=dataType.capitalize(), g=groupNode.tag, p=paramNode.tag, a='value')
 
     decl = ' '.join([dataType, member_name])
     return decl, default_stmt, getattr_stmt
@@ -96,7 +99,7 @@ int getAttributeInt(tinyxml2::XMLDocument *doc,
   for (std::string elName : elementChain) {{
     el = el->FirstChildElement(elName.c_str());
   }}
-  return el->BoolAttribute(attribute.c_str());
+  return el->IntAttribute(attribute.c_str());
 }}
 
 SimParameters parseXmlConfig(std::string fileName) {{
@@ -128,13 +131,13 @@ for group in config.getroot():
         getattr_list += getattr_stmt + ';'
 
 for file in ['simParams.h', 'simParams.cpp']:
-    if os.path.exists(f'../src/{file}'):
-        os.rename(f'../src/{file}', f'../src/{file}.{datetime.datetime.now(datetime.UTC).strftime('%H%M%S')}')
+    if os.path.exists(f'./src/{file}'):
+        os.rename(f'./src/{file}', f'./src/{file}.{datetime.datetime.now(datetime.UTC).strftime('%H%M%S')}')
 
-with open('../src/simParams.h', 'w') as file:
+with open('./src/simParams.h', 'w') as file:
     file.write(h_template.format(s=struct_list, d=default_list))
-subprocess.run(['clang-format', '-i', '../src/simParams.h'])
+subprocess.run(['clang-format', '-i', './src/simParams.h'])
 
-with open('../src/simParams.cpp', 'w') as file:
+with open('./src/simParams.cpp', 'w') as file:
     file.write(c_template.format(a=getattr_list))
-subprocess.run(['clang-format', '-i', '../src/simParams.cpp'])
+subprocess.run(['clang-format', '-i', './src/simParams.cpp'])

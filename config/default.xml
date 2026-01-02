@@ -1,4 +1,5 @@
 <!-- use SI units here unless otherwise specified! -->
+<!-- for keycodes see https://www.glfw.org/docs/3.3/group__keys.html -->
 <gravitysim>
     <visualization>
         <frameRate value="60" />
@@ -33,4 +34,21 @@
         <objSpringDamping value="1e1" />
         <objFrictionCoeff value="2.5e-2" />
     </tuning>
+    <input>
+        <forward type="int" value="87" />
+        <backward type="int" value="88" />
+        <right type="int" value="67" />
+        <left type="int" value="90" />
+        <down type="int" value="69" />
+        <up type="int" value="81" />
+        <zoomIn type="int" value="65" />
+        <zoomOut type="int" value="68" />
+        <sizeTool type="int" value="49" />
+        <speedTool type="int" value="50" />
+        <spinTool type="int" value="51" />
+        <pushTool type="int" value="52" />
+        <toolReset type="int" value="48" />
+        <clearEnv type="int" value="75" />
+        <pause type="int" value="32" />
+    </input>
 </gravitysim>

@@ -31,7 +31,7 @@ int getAttributeInt(tinyxml2::XMLDocument *doc,
   for (std::string elName : elementChain) {
     el = el->FirstChildElement(elName.c_str());
   }
-  return el->BoolAttribute(attribute.c_str());
+  return el->IntAttribute(attribute.c_str());
 }
 
 SimParameters parseXmlConfig(std::string fileName) {
@@ -117,5 +117,30 @@ SimParameters parseXmlConfig(std::string fileName) {
       getAttributeDouble(&paramsXml, {"tuning", "objSpringDamping"}, "value");
   result.tuning_objFrictionCoeff =
       getAttributeDouble(&paramsXml, {"tuning", "objFrictionCoeff"}, "value");
+  result.input_forward =
+      getAttributeInt(&paramsXml, {"input", "forward"}, "value");
+  result.input_backward =
+      getAttributeInt(&paramsXml, {"input", "backward"}, "value");
+  result.input_right = getAttributeInt(&paramsXml, {"input", "right"}, "value");
+  result.input_left = getAttributeInt(&paramsXml, {"input", "left"}, "value");
+  result.input_down = getAttributeInt(&paramsXml, {"input", "down"}, "value");
+  result.input_up = getAttributeInt(&paramsXml, {"input", "up"}, "value");
+  result.input_zoomIn =
+      getAttributeInt(&paramsXml, {"input", "zoomIn"}, "value");
+  result.input_zoomOut =
+      getAttributeInt(&paramsXml, {"input", "zoomOut"}, "value");
+  result.input_sizeTool =
+      getAttributeInt(&paramsXml, {"input", "sizeTool"}, "value");
+  result.input_speedTool =
+      getAttributeInt(&paramsXml, {"input", "speedTool"}, "value");
+  result.input_spinTool =
+      getAttributeInt(&paramsXml, {"input", "spinTool"}, "value");
+  result.input_pushTool =
+      getAttributeInt(&paramsXml, {"input", "pushTool"}, "value");
+  result.input_toolReset =
+      getAttributeInt(&paramsXml, {"input", "toolReset"}, "value");
+  result.input_clearEnv =
+      getAttributeInt(&paramsXml, {"input", "clearEnv"}, "value");
+  result.input_pause = getAttributeInt(&paramsXml, {"input", "pause"}, "value");
   return result;
 }

@@ -28,6 +28,21 @@ struct SimParameters {
   double tuning_objSpringCoeff;
   double tuning_objSpringDamping;
   double tuning_objFrictionCoeff;
+  int input_forward;
+  int input_backward;
+  int input_right;
+  int input_left;
+  int input_down;
+  int input_up;
+  int input_zoomIn;
+  int input_zoomOut;
+  int input_sizeTool;
+  int input_speedTool;
+  int input_spinTool;
+  int input_pushTool;
+  int input_toolReset;
+  int input_clearEnv;
+  int input_pause;
 };
 
 const SimParameters defaultParams = {
@@ -52,6 +67,21 @@ const SimParameters defaultParams = {
     1e4,
     1e1,
     2.5e-2,
+    87,
+    88,
+    67,
+    90,
+    69,
+    81,
+    65,
+    68,
+    49,
+    50,
+    51,
+    52,
+    48,
+    75,
+    32,
 };
 
 SimParameters parseXmlConfig(std::string fileName);
