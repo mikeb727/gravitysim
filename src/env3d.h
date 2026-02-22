@@ -5,6 +5,7 @@
 
 #include <cmath>
 #include <map>
+#include <mb-libs/renderObject.h>
 
 #include "ball.h"
 #include "simParams.h"
@@ -20,12 +21,11 @@ class Environment {
 public:
   // ctor, dtor
   Environment(); // dimensions and gravity zero
-  Environment(double width, double height, double depth, const Vec3 &gravity,
+  Environment(const Vec3 &gravity,
               double timeStep);
   ~Environment();
 
   // getters
-  const BBox bbox() const { return _bbox; };
   double dt() const { return _dt; };
   const Vec3 &gravity() const { return _g; };
   const Vec3 &wind() const { return _wind; };
@@ -36,6 +36,7 @@ public:
   // setters
   void setWind(Vec3 w) { _wind = w; };
   void setAirDensity(double d) { _airDensity = d; };
+  void setBounds(GraphicsTools::RenderObject *r) { _meshBounds = r; };
 
   // object operations
   void addObj(const Ball &obj) { _objs[_nextObjId++] = obj; };
@@ -58,11 +59,12 @@ public:
   // tuning
   // kinetic and potential of all objects
   double computeEnergy() const;
+  Vec3 computeOutsideEnv(Vec3 pos, double radius) const;
 
 private:
-  BBox _bbox; // boundary (dimensions)
-  double _dt; // time step
-  Vec3 _g;    // gravity vector
+  GraphicsTools::RenderObject *_meshBounds; // mesh boundary
+  double _dt;                               // time step
+  Vec3 _g;                                  // gravity vector
   Vec3 _wind;
   double _airDensity;
   int _nextObjId;

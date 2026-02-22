@@ -16,7 +16,12 @@ def parseParam(groupNode, paramNode):
     rval_template = 'getAttribute{d}(&paramsXml, {{"{g}", "{p}"}}, "{a}")'
     getattr_stmt += lval_template.format(m=member_name)
 
-    if all(a in paramNode.keys() for a in ('min', 'max', 'increment', 'default')):
+    if paramNode.attrib.get('path'):
+        dataType = 'std::string'
+        attr_dataType = 'string'
+        default_stmt = f'"{paramNode.attrib.get('path')}"'
+        getattr_stmt += rval_template.format(d=attr_dataType.capitalize(), g=groupNode.tag, p=paramNode.tag, a='path')
+    elif all(a in paramNode.keys() for a in ('min', 'max', 'increment', 'default')):
         dataType = 'std::vector<double>'
         attr_dataType = 'double'
         default_stmt = f'{{{paramNode.attrib.get('min')}, {param.attrib.get('max')}, {param.attrib.get('increment')}, {param.attrib.get('default')}}}'
@@ -71,6 +76,16 @@ c_template = """#include "simParams.h"
 #include <tinyxml2.h>
 
 #include <iostream>
+
+std::string getAttributeString(tinyxml2::XMLDocument *doc,
+                          std::vector<std::string> elementChain,
+                          std::string attribute) {{
+  tinyxml2::XMLElement *el = doc->RootElement();
+  for (std::string elName : elementChain) {{
+    el = el->FirstChildElement(elName.c_str());
+  }}
+  return el->Attribute(attribute.c_str());
+}}
 
 double getAttributeDouble(tinyxml2::XMLDocument *doc,
                           std::vector<std::string> elementChain,

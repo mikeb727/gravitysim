@@ -9,7 +9,13 @@
 namespace simUtils {
 
 // cursor tools for changing created ball size, speed, and spin angle/speed
-enum class Tool { None = 0, SizeTool = 1, SpeedTool = 2, SpinTool = 3, PushTool = 4};
+enum class Tool {
+  GrabTool = 0,
+  SizeTool = 1,
+  SpeedTool = 2,
+  SpinTool = 3,
+  PushTool = 4
+};
 
 // cursor data and visibility for now
 struct UserCursor {
@@ -23,6 +29,10 @@ struct UserCursor {
   Vec3 rightClickDragDelta;
   // approximate on-screen cursor velocity
   Vec3 cursorVel;
+  Vec3 candidateObjVel;
+  Vec3 objKickVel;
+  bool speedToolFacingCamera = false;
+  bool kickToolFacingCamera = false;
   int baseRenderObjId; // size tool cursor is treated as base render ID, other
                        // cursors are offsets
   int selectedObjId = -1;
@@ -33,16 +43,14 @@ struct UserCursor {
 
 typedef std::map<int, GraphicsTools::RenderObject> ObjMap;
 
-Vec3 remapGlfwCursor(Vec3 vec, GraphicsTools::Window *win);
-
-void drawUserCursor(GraphicsTools::Window *win, simUtils::UserCursor *uc);
-void drawCursor(GraphicsTools::Window *win, CursorData cur, int curGfxId);
+void drawUserCursor(GraphicsTools::Window &win, simUtils::UserCursor &uc,
+                    bool insideEnv, int objIdAtCursor);
+void drawCursor(GraphicsTools::Window &win, CursorData cur, int curGfxId);
 void populateSpinRingPoints(float speed, float radius, Vec3 origin, Vec3 axis,
                             float *destArray, int arraySize);
 
-void drawSim(GraphicsTools::Window *win);
-void setupEnvWalls(GraphicsTools::Window *win);
-void setupUserCursors(GraphicsTools::Window *win, UserCursor *uc);
+void drawSim(GraphicsTools::Window &win);
+void setupUserCursors(GraphicsTools::Window &win, UserCursor *uc);
 
 double computeTNow();
 
@@ -52,16 +60,23 @@ double scalarRk4(const double &v, const double &dv, const double &ddv,
                  double dt);
 
 // common object creation
-void createObj(GraphicsTools::Window *win);
+void createObj(GraphicsTools::Window &win, Vec3 candidateObjPos,
+               Vec3 candidateObjVel);
 // linked object deletion
-void clearEnvObjs(GraphicsTools::Window *win);
-void removeEnvObj(GraphicsTools::Window *win, int objId);
+void clearEnvObjs(GraphicsTools::Window &win);
+void removeEnvObj(GraphicsTools::Window &win, int objId);
 void setupControls(ControlSet &ctrlSet);
 
-int objIdAtEnvPos(Vec3 pos, Environment *env);
-bool cubeOverlapAtEnvPos(Vec3 pos, Environment *env, float radius);
+int objIdAtEnvPos(Vec3 pos, Environment &env, float radius = 0.0);
 
 Vec3 glmToVec3(glm::vec3 v);
+
+void handleUserInput(GraphicsTools::Window &win);
+
+// GLFW callbacks
+void keyCallback(GLFWwindow *win, int key, int scancode, int action, int mods);
+void scrollCallback(GLFWwindow *win, double x, double y);
+void mouseButtonCallback(GLFWwindow *win, int button, int action, int m);
 
 } // namespace simUtils
 

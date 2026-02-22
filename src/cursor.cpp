@@ -121,11 +121,11 @@ void CursorEmulator::computePos(double tNow) {
 void CursorEmulator::generatePos() {
   current.action = ChangePosition;
   Environment *env = static_cast<Environment *>(_win->userPointer("env"));
-  std::uniform_real_distribution<float> xDist(3 - (0.5 * env->bbox().w()),
-                                              (0.5 * env->bbox().w()) - 3);
-  std::uniform_real_distribution<float> yDist(0, (0.5 * env->bbox().h()) - 3);
-  std::uniform_real_distribution<float> zDist(3 - (0.5 * env->bbox().d()),
-                                              (0.5 * env->bbox().d()) - 3);
+  std::uniform_real_distribution<float> xDist(3 - (0.5 * 0),
+                                              (0.5 * 0) - 3);
+  std::uniform_real_distribution<float> yDist(0, (0.5 * 0) - 3);
+  std::uniform_real_distribution<float> zDist(3 - (0.5 * 0),
+                                              (0.5 * 0) - 3);
 
   target.ballX = xDist(rng);
   target.ballY = yDist(rng);
@@ -221,7 +221,9 @@ void CursorEmulator::generateAngularVel() {
 
 void CursorEmulator::createObj() {
   current.action = CreateObject;
-  simUtils::createObj((GraphicsTools::Window *)_win);
+  simUtils::createObj(*(GraphicsTools::Window *)_win,
+                      Vec3(current.ballX, current.ballY, current.ballZ),
+                      Vec3());
 }
 
 void CursorEmulator::clearEnv() {

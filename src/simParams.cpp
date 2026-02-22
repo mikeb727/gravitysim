@@ -4,6 +4,16 @@
 
 #include <iostream>
 
+std::string getAttributeString(tinyxml2::XMLDocument *doc,
+                               std::vector<std::string> elementChain,
+                               std::string attribute) {
+  tinyxml2::XMLElement *el = doc->RootElement();
+  for (std::string elName : elementChain) {
+    el = el->FirstChildElement(elName.c_str());
+  }
+  return el->Attribute(attribute.c_str());
+}
+
 double getAttributeDouble(tinyxml2::XMLDocument *doc,
                           std::vector<std::string> elementChain,
                           std::string attribute) {
@@ -55,10 +65,8 @@ SimParameters parseXmlConfig(std::string fileName) {
       getAttributeDouble(&paramsXml, {"environment", "unitsPerMeter"}, "value");
   result.environment_paused =
       getAttributeBool(&paramsXml, {"environment", "paused"}, "value");
-  result.environment_boundary = Vec3(
-      getAttributeDouble(&paramsXml, {"environment", "boundary"}, "width"),
-      getAttributeDouble(&paramsXml, {"environment", "boundary"}, "height"),
-      getAttributeDouble(&paramsXml, {"environment", "boundary"}, "depth"));
+  result.environment_boundary =
+      getAttributeString(&paramsXml, {"environment", "boundary"}, "path");
   result.environment_gravity =
       Vec3(getAttributeDouble(&paramsXml, {"environment", "gravity"}, "x"),
            getAttributeDouble(&paramsXml, {"environment", "gravity"}, "y"),
@@ -78,28 +86,22 @@ SimParameters parseXmlConfig(std::string fileName) {
       getAttributeDouble(&paramsXml, {"controls", "radius"}, "max"),
       getAttributeDouble(&paramsXml, {"controls", "radius"}, "increment"),
       getAttributeDouble(&paramsXml, {"controls", "radius"}, "default")};
-  result.controls_velocityForward = {
-      getAttributeDouble(&paramsXml, {"controls", "velocityForward"}, "min"),
-      getAttributeDouble(&paramsXml, {"controls", "velocityForward"}, "max"),
-      getAttributeDouble(&paramsXml, {"controls", "velocityForward"},
+  result.controls_velocityPitch = {
+      getAttributeDouble(&paramsXml, {"controls", "velocityPitch"}, "min"),
+      getAttributeDouble(&paramsXml, {"controls", "velocityPitch"}, "max"),
+      getAttributeDouble(&paramsXml, {"controls", "velocityPitch"},
                          "increment"),
-      getAttributeDouble(&paramsXml, {"controls", "velocityForward"},
-                         "default")};
-  result.controls_velocityX = {
-      getAttributeDouble(&paramsXml, {"controls", "velocityX"}, "min"),
-      getAttributeDouble(&paramsXml, {"controls", "velocityX"}, "max"),
-      getAttributeDouble(&paramsXml, {"controls", "velocityX"}, "increment"),
-      getAttributeDouble(&paramsXml, {"controls", "velocityX"}, "default")};
-  result.controls_velocityY = {
-      getAttributeDouble(&paramsXml, {"controls", "velocityY"}, "min"),
-      getAttributeDouble(&paramsXml, {"controls", "velocityY"}, "max"),
-      getAttributeDouble(&paramsXml, {"controls", "velocityY"}, "increment"),
-      getAttributeDouble(&paramsXml, {"controls", "velocityY"}, "default")};
-  result.controls_velocityZ = {
-      getAttributeDouble(&paramsXml, {"controls", "velocityZ"}, "min"),
-      getAttributeDouble(&paramsXml, {"controls", "velocityZ"}, "max"),
-      getAttributeDouble(&paramsXml, {"controls", "velocityZ"}, "increment"),
-      getAttributeDouble(&paramsXml, {"controls", "velocityZ"}, "default")};
+      getAttributeDouble(&paramsXml, {"controls", "velocityPitch"}, "default")};
+  result.controls_velocityYaw = {
+      getAttributeDouble(&paramsXml, {"controls", "velocityYaw"}, "min"),
+      getAttributeDouble(&paramsXml, {"controls", "velocityYaw"}, "max"),
+      getAttributeDouble(&paramsXml, {"controls", "velocityYaw"}, "increment"),
+      getAttributeDouble(&paramsXml, {"controls", "velocityYaw"}, "default")};
+  result.controls_velocityMag = {
+      getAttributeDouble(&paramsXml, {"controls", "velocityMag"}, "min"),
+      getAttributeDouble(&paramsXml, {"controls", "velocityMag"}, "max"),
+      getAttributeDouble(&paramsXml, {"controls", "velocityMag"}, "increment"),
+      getAttributeDouble(&paramsXml, {"controls", "velocityMag"}, "default")};
   result.controls_velocityAngular = {
       getAttributeDouble(&paramsXml, {"controls", "velocityAngular"}, "min"),
       getAttributeDouble(&paramsXml, {"controls", "velocityAngular"}, "max"),
@@ -111,6 +113,21 @@ SimParameters parseXmlConfig(std::string fileName) {
       Vec3(getAttributeDouble(&paramsXml, {"controls", "angularAxis"}, "x"),
            getAttributeDouble(&paramsXml, {"controls", "angularAxis"}, "y"),
            getAttributeDouble(&paramsXml, {"controls", "angularAxis"}, "z"));
+  result.controls_kickPitch = {
+      getAttributeDouble(&paramsXml, {"controls", "kickPitch"}, "min"),
+      getAttributeDouble(&paramsXml, {"controls", "kickPitch"}, "max"),
+      getAttributeDouble(&paramsXml, {"controls", "kickPitch"}, "increment"),
+      getAttributeDouble(&paramsXml, {"controls", "kickPitch"}, "default")};
+  result.controls_kickYaw = {
+      getAttributeDouble(&paramsXml, {"controls", "kickYaw"}, "min"),
+      getAttributeDouble(&paramsXml, {"controls", "kickYaw"}, "max"),
+      getAttributeDouble(&paramsXml, {"controls", "kickYaw"}, "increment"),
+      getAttributeDouble(&paramsXml, {"controls", "kickYaw"}, "default")};
+  result.controls_kickMag = {
+      getAttributeDouble(&paramsXml, {"controls", "kickMag"}, "min"),
+      getAttributeDouble(&paramsXml, {"controls", "kickMag"}, "max"),
+      getAttributeDouble(&paramsXml, {"controls", "kickMag"}, "increment"),
+      getAttributeDouble(&paramsXml, {"controls", "kickMag"}, "default")};
   result.tuning_objSpringCoeff =
       getAttributeDouble(&paramsXml, {"tuning", "objSpringCoeff"}, "value");
   result.tuning_objSpringDamping =

@@ -4,7 +4,7 @@ OBJ=sim3d.o env3d.o ball.o vec3d.o quaternion.o bbox.o control.o simParams.o cur
 OBJS=$(addprefix $(BIN), $(OBJ))
 
 LINK=clang++
-LFLAGS=-lSDL2 -lGL -lglfw -lfreetype -ltinyxml2 -L/usr/lib/mb-libs -lmbgfx
+LFLAGS=-lSDL2 -lGL -lglfw -lfreetype -ltinyxml2 -L/usr/lib/mb-libs -lmbgfx -lassimp
 LFLAGS_STATIC=-lSDL2 -lGL -lglfw -lfreetype -ltinyxml2 -L/usr/lib/mb-libs /usr/lib/mb-libs/libmbgfx.a
 
 DFLAGS=-g -O0
@@ -29,4 +29,4 @@ $(TARGET)_static: $(OBJS)
 
 $(BIN)%.o: $(SRC)%.cpp
 	mkdir -p $(BIN)
-	$(CPP) -std=c++17 $(DFLAGS) -I/usr/include/freetype2 -c $< -o $@
+	$(CPP) -std=c++20 $(DFLAGS) -I/usr/include/freetype2 -c $< -o $@
